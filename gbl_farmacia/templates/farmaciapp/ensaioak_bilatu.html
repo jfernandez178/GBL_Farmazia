@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+    <head>
+         <link rel="icon" href="http://getbootstrap.com/favicon.ico">
+        <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="http://getbootstrap.com/examples/dashboard/dashboard.css" rel="stylesheet">
+        <!-- Is anyone getting tired of repeatedly entering the header over and over?? -->
+        <title>Ensaio-Bilaketa</title>
+    </head>
+
+    <body>
+          <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/farmaciapp/">FARMACIAPP</a>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="/farmaciapp/">Hasiera</a></li>
+                <li><a href="/farmaciapp/logout/">Sesioa itxi</a><br/></li>
+
+            </ul>
+        </div></div></div>
+
+            <div class="container-fluid">
+        <div class="row">
+                <div class="col-sm-3 col-md-2 sidebar">
+        <h3>Erabiltzailea: {{ user.username }}</h3>
+        <li><a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu</a></li>
+        <li><a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu</a></li>
+        {% if mota == farmazia %}
+            <li><a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a></li>
+        {% endif %}
+        <li><a href="../">Atzera</a></li>
+        <li><a href="/farmaciapp/aukera_menua">Hasiera</a></li>
+        
+        </div>
+
+
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+        <br/><br/> 
+
+        <form id="ensaioak_bilatu" method="POST" action="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/" enctype="multipart/form-data">
+            
+            {% csrf_token %}
+
+            {{ ensaio_bilaketa_form.as_p }}
+            {{ ensaio_bilaketa_form2.as_p }}
+
+
+            <input class="btn btn-primary" type="submit" name="bilatu_ensaioak" value="Bilatu"/>
+           
+        </form>
+        
+        <br/>
+
+        <!--<input class="btn btn-primary" type=button name="botonAtzera" onClick="location.href='../'" value='Atzera'>
+        <br/><br/>
+        <input class="btn btn-primary" type=button name="botonHome" onClick="location.href='/farmaciapp/aukera_menua'" value='Hasiera'>-->
+        <br/><br/>
+
+
+
+        {% if mota == farmazia %}
+
+        <form id="ensaio_ezabaketa" action="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ezabatu/" method="POST">
+        
+            {% csrf_token %}
+  
+            {% for e in bilaketa_emaitzak %}
+
+
+                <input type="checkbox" name="ensaioa" id="ensaioa" value={{e.titulua}} />
+                <label for="ensaioa"><b><a href="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{ e.titulua }}">{{ e.titulua }}</a></b></label><br />
+
+                            <!--<li class="active"><li>
+                            <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{ e.titulua }}">{{ e.titulua }}</a></li>-->
+            {% endfor %}
+            <input class="btn btn-primary" type="submit" value="Ezabatu">
+        </form>
+
+
+        {% for e in ensaio_lista %}
+            {{e}} ezabatu da<br/>
+        {% endfor %}
+
+        {% else %}
+
+        {% for e in bilaketa_emaitzak %}
+
+
+               <li>
+                    <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{ e.titulua }}">{{ e.titulua }}</a></li>
+        {% endfor %}
+
+
+
+        {% endif %}
+
+        </div></div>
+        
+
+    </body>
+</html>

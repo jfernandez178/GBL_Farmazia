@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+    <head>
+         <link rel="icon" href="http://getbootstrap.com/favicon.ico">
+        <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="http://getbootstrap.com/examples/dashboard/dashboard.css" rel="stylesheet">
+        <!-- Is anyone getting tired of repeatedly entering the header over and over?? -->
+        <title>{{titulua}} ensaioaren medikamentuak:</title>
+    </head>
+
+    <body>
+
+          <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/farmaciapp/">FARMACIAPP</a>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu</a></li>
+                <li><a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu</a></li>
+                {% if mota == farmazia %}
+                    <li><a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a></li>
+                {% endif %}
+                <li><a href="/farmaciapp/">Hasiera</a></li>
+                <li><a href="/farmaciapp/logout/">Sesioa itxi</a><br/></li>
+
+            </ul>
+        </div></div></div>
+
+            <div class="container-fluid">
+        <div class="row">
+                <div class="col-sm-3 col-md-2 sidebar">
+        <h3>Erabiltzailea: {{ user.username }}</h3>
+        <li><a href="../">Atzera</a></li>
+        <li><a href="/farmaciapp/aukera_menua">Hasiera</a></li>
+        </div>
+
+
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+            <br/><br/>
+
+        {% if mota == farmazia %}
+
+        <!--TODO-->
+        {% for m in medikamentuen_lista %}
+            <li class="active"><li>
+                    {{ m.medikamentua }}</a></li>
+        {% endfor %}
+        <br/><br/>
+        <form id="ensaioa_sortu2" method="post" action="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{titulua}}/medikamentuak/" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            {{ medikamentua_form.as_p }}
+
+            <input class="btn btn-primary" type="submit" name="gehitu_medikamentu_berria_ensaiora" value="Gehitu Medikamentua"/>
+           
+        </form>
+
+        {% endif %}
+
+
+
+        <!--<input type=button name="botonMedikamentuaGehituEnsaioari" onClick="location.href='/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{titulua}}/medikamentuak/'" value='Gehitu Medikamentua'>-->
+        <br/><br/>
+        <!--<input class="btn btn-primary" type=button name="botonAtzera" onClick="location.href='..'" value='Atzera'>
+        <br/><br/>
+        <input class="btn btn-primary" type=button name="botonHome" onClick="location.href='/farmaciapp/aukera_menua'" value='Hasiera'>-->
+        <br/><br/>
+        
+
+        </div></div>
+    </body>
+</html>

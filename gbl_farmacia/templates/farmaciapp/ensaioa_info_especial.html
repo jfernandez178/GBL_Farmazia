@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+    <head>
+         <link rel="icon" href="http://getbootstrap.com/favicon.ico">
+        <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="http://getbootstrap.com/examples/dashboard/dashboard.css" rel="stylesheet">
+        <!-- Is anyone getting tired of repeatedly entering the header over and over?? -->
+        <title>Ensaio-Bilaketa</title>
+    </head>
+
+    <body>
+          <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/farmaciapp/">FARMACIAPP</a>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="/farmaciapp/">Hasiera</a></li>
+                <li><a href="/farmaciapp/logout/">Sesioa itxi</a><br/></li>
+
+            </ul>
+        </div></div></div>
+
+            <div class="container-fluid">
+        <div class="row">
+               <div class="col-sm-3 col-md-2 sidebar">
+        <h3>Erabiltzailea: {{ user.username }}</h3>
+        <li><a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu</a></li>
+        <li><a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu</a></li>
+        {% if mota == farmazia %}
+            <li><a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a></li>
+        {% endif %}
+        <li><a href="../..">Atzera</a></li>
+        <li><a href="/farmaciapp/aukera_menua">Hasiera</a></li>
+        </div>
+
+
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+            <br/><br/>
+
+        Egoera: {{egoera}}<br/><br/>
+
+        Hasiera Data: {{hasieraData}}<br/><br/>
+
+        Bukaera Data: {{bukaeraData}}<br/><br/>
+
+        Protokolo Zenbakia: {{protokoloZenbakia}}<br/><br/>
+
+        Titulua: {{titulua}}<br/><br/>
+
+        Zerbitzua: {{zerbitzua}}<br/><br/>
+
+        Promotorea: {{promotorea}}<br/><br/>
+
+        Estudio Mota: {{estudioMota}}<br/><br/>
+
+        Monitorea: {{monitorea}}<br/><br/>
+
+        Ikertzailea: {{ikertzailea}}<br/><br/>
+
+        Komentarioak: {{komentarioak}}<br/><br/>
+
+        Medikamentuak:<br/>
+        {% for m in medikamentuak %}
+            <li>
+                    {{ m.medikamentua }}</a></li>
+        {% endfor %}
+        <br/><br/>
+        <input class="btn btn-primary" type=button name="botonErrezetaGehituEnsaiotik" onClick="location.href='/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{titulua}}/errezeta_berria_botoia/'" value='Errezeta Gehitu'><br/><br/><br/>
+        
+        Todo: ERREZETA BAT ESKATZEN DA, ETA HAU EGITEAN, FARMAZIAKO ENKARGATUAK IKUSI AHALKO DUEN LISTA BATETAN PILATUKO DA. LISTA HAU, ERREZETA EGIN DUEN MEDIKUAK BERAK (ESPECIAL-AK) ERE IKUSI AHALKO LUKE. (BORRATU EDO ALDATZEKO)
+        <br/>
+        Dispentsazioak ikusteko aukera (bilaketan paziente bat espezifikatu bada, paziente horrenak, bestela bilatu)
+        <br/><br/>
+
+        {% if mota == farmazia %}
+        <input class="btn btn-primary" type=button name="botonMedikamentuakGehituEnsaioari" onClick="location.href='/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{titulua}}/medikamentuak/'" value='Medikamentuak Gehitu Ensaioari'>
+
+        {% endif %}
+
+        <br/><br/>
+
+
+
+        <form id="dispentsazioak_ikusi" method="post" action="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{titulua}}/dispentsazioak/" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            {{ dispentsazioak_form.as_p }}
+
+            <input class="btn btn-primary" type="submit" name="ikusi_dispentsazioak" value="Dispentsazioak Aztertu"/>
+           
+        </form>
+
+
+
+        <!--<input type=button name="dispentsazioakIkusi" onClick="location.href='/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{titulua}}/dispentsazioak/" value='Dispentsazioak Ikusi'><br/>-->
+
+
+        
+        <br/>
+
+        <!--<input class="btn btn-primary" type=button name="botonAtzera" onClick="location.href='../..'" value='Atzera'>
+        <br/><br/>
+        <input class="btn btn-primary" type=button name="botonHome" onClick="location.href='/farmaciapp/aukera_menua'" value='Hasiera'>-->
+        <br/><br/>
+
+        </div></div>
+        
+    </body>
+</html>
