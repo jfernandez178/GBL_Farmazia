@@ -32,99 +32,243 @@
         <div class="row">
                 <div class="col-sm-3 col-md-2 sidebar">
         <h3>Erabiltzailea: {{ user.username }}</h3>
-        <li><a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu</a></li>
-        <li><a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu</a></li>
-        {% if mota == farmazia %}
-            <li><a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a></li>
-        {% endif %}
-        <li><a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu">Atzera</a></li>
-        <li><a href="/farmaciapp/aukera_menua">Hasiera</a></li>
+        <br/><h4>Zerbitzua: {{mota}}</h4>
+                <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu</a><br/>
+                <a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu</a><br/>
+                {% if mota == farmazia %}
+                    <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a><br/>
+                {% endif %}
+                {% if mota == admin %}
+                    <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a><br/>
+                    <a href="/farmaciapp/aukera_menua/erabiltzaile_menua/">Erabiltzaileak Kudeatu</a><br/>
+                {% endif %}
+                <br/>
+                {% if onartuta %}
+                <a href="../../..">Atzera</a><br/>
+                {% else %}
+                <a href="../..">Atzera</a><br/>
+
+                {% endif %}
+                <a href="/farmaciapp/aukera_menua">Hasiera</a>
         </div>
 
 
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
             <br/><br/>
 
-        
-        {% if mota == farmazia %}
-        
-
-        Ensaioa: {{ensaioa}}<br/><br/>
-
-        Pazientea: {{pazientea_ident}}<br/><br/>
-
-        Pazientearen Pisua: {{paziente_pisua}}<br/><br/>
-
-        Preskripzio Data: {{preskripzioData}}<br/><br/>
-
-        Hurrengo Preskripzio Data: {{hurrengoPreskripzioData}}<br/><br/>
-        
-        <br/><br/>
-        
-
-        <form id="errezeta_onarpena" action="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/errezeta/{{errezeta_ident}}/errezeta_onartu/" method="POST">
-        
-            {% csrf_token %}
-
-            <input type="hidden" name="ensaioa" value="{{ensaioa}}">
-            <input type="hidden" name="pazientea" value="{{pazientea_ident}}">
-            <input type="hidden" name="preskripzioData" value="{{preskripzioData}}">
-            <input type="hidden" name="hurrengoPreskripzioData" value="{{hurrengoPreskripzioData}}">
-
-            
-            <input class="btn btn-primary" type="submit" value="Errezeta Onartu eta Dispentsatu">
-        </form>
-
-       
-
-
-        <!--<input type=button name="botonOnartuErrezeta" onClick="location.href='/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/errezeta/{{errezeta_ident}}/errezeta_onartuta'" value='Errezeta Onartu eta Dispentsatu'>-->
+        {% if onartuta %}
+        Dispentsazioa onartu da.
         <br/><br/>
 
-        TODO: HEMEN KONPROBATU BEHAR DA EA FARMAZEUTIKOA DAGOEN BEGIRA, GAINONTZEKO INFORMAZIOA JARTZEKO, EDO MEDIKUA DEN ETA ZERBAIT ALDATU DEZAKEEN IKUSTEKO
-        
+        <input class="btn btn-primary" type=button name="botonAtzera" onClick="location.href='../../..'" value='Atzera'>
+        <br/><br/>
+
+
+
+
+
         {% else %}
         
-        {% if errezetaren_sortzailea == user.username %}
-        
-        <form id="errezeta_moldaketa" action="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/errezeta/{{errezeta_ident}}/modifikatu/" method="POST">
-        
-            {% csrf_token %}
+            {% if mota == farmazia or mota == admin %}
 
-            <input type="hidden" name="errezetaren_sortzailea" value="{{errezetaren_sortzailea}}">
-            <input type="hidden" name="ensaioaZ" value="{{ensaioa}}">
-            <input type="hidden" name="pazientea_identZ" value="{{pazientea_ident}}">
-            <input type="hidden" name="preskripzioDataZ" value="{{preskripzioData}}">
-            <input type="hidden" name="hurrengoPreskripzioDataZ" value="{{hurrengoPreskripzioData}}">
-            <input type="hidden" name="pazientePisuaZ" value="{{paziente_pisua}}">
+            {% if errezetaren_sortzailea == user.username %}
 
-            {{errezeta_form.as_p}}
+             <form id="errezeta_moldaketa" action="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/errezeta/{{errezeta_ident}}/modifikatu/" method="POST">
+            
+                {% csrf_token %}
 
+                <input type="hidden" name="errezetaren_sortzailea" value="{{errezetaren_sortzailea}}">
+                <input type="hidden" name="ensaioaZ" value="{{ensaioa}}">
+                <input type="hidden" name="pazientea_identZ" value="{{pazientea_ident}}">
+                <input type="hidden" name="preskripzioDataZ" value="{{preskripzioData}}">
+                <input type="hidden" name="hurrengoPreskripzioDataZ" value="{{hurrengoPreskripzioData}}">
+                <input type="hidden" name="pazientePisuaZ" value="{{paziente_pisua}}">
+
+                {{errezeta_form.as_p}}
+
+                <br/>
+                Sortzailea: {{errezetaren_sortzailea}}
+                <br/><br/>
+
+
+                
+                <input class="btn btn-primary" type="submit" value="Errezeta Modifikatu">
+            </form>
+
+            <br/><br/>
+
+            <form id="errezeta_onarpena" action="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/errezeta/{{errezeta_ident}}/errezeta_onartu/" method="POST">
+            
+                {% csrf_token %}
+
+                <input type="hidden" name="ensaioa" value="{{ensaioa}}">
+                <input type="hidden" name="pazientea" value="{{pazientea_ident}}">
+                <input type="hidden" name="preskripzioData" value="{{preskripzioData}}">
+                <input type="hidden" name="hurrengoPreskripzioData" value="{{hurrengoPreskripzioData}}">
+
+                Aukeratu dispentsaziorako medikamentuak:
+
+                <br/><br/>
+
+
+                {% for em in ensaioaren_medikamentuak %}
+
+
+                    <br/><input type="checkbox" name="medikamentua" id="medikamentua" value="{{em}}" />
+                        <label for="medikamentua"><b>{{ em }}</b></label>       
+
+                    &nbsp&nbsp&nbsp&nbsp Unitateak: <input type="number" name="{{em}}" value="{{em.medikamentua.unitateak}}" min="1" max="{{em.medikamentua.unitateak}}">  
+
+                                   
+                {% endfor %}
+                <br/><br/>
+
+                
+                <input class="btn btn-primary" type="submit" value="Errezeta Onartu eta Dispentsatu">
+            </form>
 
             
-            <input class="btn btn-primary" type="submit" value="Errezeta Modifikatu">
-        </form>
 
-        {% else %}
-        Ensaioa: {{ensaioa}}<br/><br/>
+            
+                
 
-        Pazientea: {{pazientea_ident}}<br/><br/>
 
-        Pazientearen Pisua: {{paziente_pisua}}<br/><br/>
 
-        Preskripzio Data: {{preskripzioData}}<br/><br/>
 
-        Hurrengo Preskripzio Data: {{hurrengoPreskripzioData}}<br/><br/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            {% else %}
+            
+
+            Ensaioa: {{ensaioa}}<br/><br/>
+
+            Pazientea: {{pazientea_ident}}<br/><br/>
+
+            Pazientearen Pisua: {{paziente_pisua}}<br/><br/>
+
+            Preskripzio Data: {{preskripzioData}}<br/><br/>
+
+            Hurrengo Preskripzio Data: {{hurrengoPreskripzioData}}<br/><br/>
+
+            {% if mota == admin %}
+
+            Sortzailea: {{errezetaren_sortzailea}}
+
+            
+
+            {% endif %}
+            
+            <br/><br/>
+            
+
+            <form id="errezeta_onarpena" action="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/errezeta/{{errezeta_ident}}/errezeta_onartu/" method="POST">
+            
+                {% csrf_token %}
+
+                <input type="hidden" name="ensaioa" value="{{ensaioa}}">
+                <input type="hidden" name="pazientea" value="{{pazientea_ident}}">
+                <input type="hidden" name="preskripzioData" value="{{preskripzioData}}">
+                <input type="hidden" name="hurrengoPreskripzioData" value="{{hurrengoPreskripzioData}}">
+
+                Aukeratu dispentsaziorako medikamentuak:
+
+                <br/><br/>
+
+
+                {% for em in ensaioaren_medikamentuak %}
+
+
+                    <br/><input type="checkbox" name="medikamentua" id="medikamentua" value="{{em}}" />
+                        <label for="medikamentua"><b>{{ em }}</b></label>       
+
+                    &nbsp&nbsp&nbsp&nbsp Unitateak: <input type="number" name="{{em}}" value="{{em.medikamentua.unitateak}}" min="1" max="{{em.medikamentua.unitateak}}">  
+
+                                   
+                {% endfor %}
+                <br/><br/>
+
+                
+                <input class="btn btn-primary" type="submit" value="Errezeta Onartu eta Dispentsatu">
+            </form>
+
+
+           
+            {% endif %}
+
+            <!--<input type=button name="botonOnartuErrezeta" onClick="location.href='/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/errezeta/{{errezeta_ident}}/errezeta_onartuta'" value='Errezeta Onartu eta Dispentsatu'>-->
+            <br/><br/>
+
+            TODO: HEMEN KONPROBATU BEHAR DA EA FARMAZEUTIKOA DAGOEN BEGIRA, GAINONTZEKO INFORMAZIOA JARTZEKO, EDO MEDIKUA DEN ETA ZERBAIT ALDATU DEZAKEEN IKUSTEKO
+            
+            {% else %}
+            
+            {% if errezetaren_sortzailea == user.username %}
+            
+            <form id="errezeta_moldaketa" action="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/errezeta/{{errezeta_ident}}/modifikatu/" method="POST">
+            
+                {% csrf_token %}
+
+                <input type="hidden" name="errezetaren_sortzailea" value="{{errezetaren_sortzailea}}">
+                <input type="hidden" name="ensaioaZ" value="{{ensaioa}}">
+                <input type="hidden" name="pazientea_identZ" value="{{pazientea_ident}}">
+                <input type="hidden" name="preskripzioDataZ" value="{{preskripzioData}}">
+                <input type="hidden" name="hurrengoPreskripzioDataZ" value="{{hurrengoPreskripzioData}}">
+                <input type="hidden" name="pazientePisuaZ" value="{{paziente_pisua}}">
+
+                {{errezeta_form.as_p}}
+
+
+                
+                <input class="btn btn-primary" type="submit" value="Errezeta Modifikatu">
+            </form>
+
+            {% else %}
+            Ensaioa: {{ensaioa}}<br/><br/>
+
+            Pazientea: {{pazientea_ident}}<br/><br/>
+
+            Pazientearen Pisua: {{paziente_pisua}}<br/><br/>
+
+            Preskripzio Data: {{preskripzioData}}<br/><br/>
+
+            Hurrengo Preskripzio Data: {{hurrengoPreskripzioData}}<br/><br/>
+
+            {% endif %}
+            {% endif %}
+            <br/>
+
+            <!--<input class="btn btn-primary" type=button name="botonAtzera" onClick="location.href='../..'" value='Atzera'>
+            <br/><br/>
+            <input class="btn btn-primary" type=button name="botonHome" onClick="location.href='/farmaciapp/aukera_menua'" value='Hasiera'>-->
+            <br/><br/>
+            {% if mezua %}
+            Errezeta ondo eguneratu da!
+
+
+            {% endif %}
 
         {% endif %}
-        {% endif %}
-        <br/>
-
-        <!--<input class="btn btn-primary" type=button name="botonAtzera" onClick="location.href='../..'" value='Atzera'>
-        <br/><br/>
-        <input class="btn btn-primary" type=button name="botonHome" onClick="location.href='/farmaciapp/aukera_menua'" value='Hasiera'>-->
-        <br/><br/>
-        {{mezua}}
 
         </div></div>
         

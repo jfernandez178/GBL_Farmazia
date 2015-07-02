@@ -32,54 +32,55 @@
         <div class="row">
                 <div class="col-sm-3 col-md-2 sidebar">
         <h3>Erabiltzailea: {{ user.username }}</h3>
-        <li><a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu</a></li>
-        <li><a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu</a></li>
+        <br/><h4>Zerbitzua: {{mota}}</h4>
+        <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu</a>
+        <br/><a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu</a>
         {% if mota == farmazia %}
-            <li><a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a></li>
+            <br/><a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a>
         {% endif %}
-        <li><a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Atzera</a></li>
-        <li><a href="/farmaciapp/aukera_menua">Hasiera</a></li>
+        {% if mota == admin %}
+            <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a><br/>
+            <a href="/farmaciapp/aukera_menua/erabiltzaile_menua/">Erabiltzaileak Kudeatu</a><br/>
+        {% endif %}
+
+        
+        <br/><br/><a href="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{titulua}}/errezeta_berria_botoia/">Atzera</a>
+        
+        <br/><a href="/farmaciapp/aukera_menua">Hasiera</a>
         </div>
 
 
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
 
-        <!--{% if mota == farmazia %}-->
+        
         <br/><br/>
 
-        {% if sortuta %}
-        Errezeta ondo sortu da!<br/><br/>
+        {% if erregistratuta %}
+        Pazientea ondo erregistratu da!
+
         {% else %}
 
-        <form id="errezeta_sortu" method="post" action="/farmaciapp/aukera_menua/errezeta_sorkuntza/" enctype="multipart/form-data">
+        
+
+        <form id="paziente_berria_sortu" method="post" action="/farmaciapp/aukera_menua/errezeta_sorkuntza/paziente_berria/" enctype="multipart/form-data">
             {% csrf_token %}
 
-            {{ errezeta_form.as_p }}
+            {{ paziente_form.as_p }}
+            <input type="hidden" name="eratorpena" value="{{eratorpena}}">
+            <input type="hidden" name="ensaioa" value="{{ensaioa}}">
 
-            <input class="btn btn-primary" type="submit" name="sortu_errezeta_berria" value="Sortu Errezeta"/>
+
+            <input class="btn btn-primary" type="submit" name="sortu_paziente_berria" value="Erregistratu Pazientea"/>
            
         </form>
-        <br/>
+
+        <br/><br/>
+        Mezua: {{mezua}}
 
         {% endif %}
-        <!--{% endif %}-->
-          {{mezua}}
-        <!--<br/><br/>
-        {{sortuta}}-->
-        <br/><br/>
-      
-
-
-
-        <!--<input class="btn btn-primary" type=button name="botonAtzera" onClick="location.href='/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/'" value='Atzera'>
-        <br/><br/>
-        <input class="btn btn-primary" type=button name="botonHome" onClick="location.href='/farmaciapp/aukera_menua'" value='Hasiera'>-->
-
-
-
-<!--anadir medicamentos botoia emoten denean, textfield-etan gordetako informazioa gorde behar denez, localstorage-en gorde daitezke, adibidez -->       
 
        </div></div>
+
         
     </body>
 </html>

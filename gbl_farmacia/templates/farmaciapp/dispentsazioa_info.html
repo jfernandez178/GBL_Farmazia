@@ -32,14 +32,20 @@
          <div class="container-fluid">
         <div class="row">
            <div class="col-sm-3 col-md-2 sidebar">
-        <h3>Erabiltzailea: {{ user.username }}</h3>
-        <li><a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu</a></li>
-        <li><a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu</a></li>
-        {% if mota == farmazia %}
-            <li><a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a></li>
-        {% endif %}
-        <li><a href="../">Atzera</a></li>
-        <li><a href="/farmaciapp/aukera_menua">Hasiera</a></li>
+       <h3>Erabiltzailea: {{ user.username }}</h3>
+       <br/><h4>Zerbitzua: {{mota}}</h4>
+                <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu</a><br/>
+                <a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu</a><br/>
+                {% if mota == farmazia %}
+                    <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a><br/>
+                {% endif %}
+                {% if mota == admin %}
+                    <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a><br/>
+                    <a href="/farmaciapp/aukera_menua/erabiltzaile_menua/">Erabiltzaileak Kudeatu</a><br/>
+                {% endif %}
+                <br/>
+                <a href="..">Atzera</a><br/>
+                <a href="/farmaciapp/aukera_menua">Hasiera</a>
         </div>
 
 
@@ -48,11 +54,19 @@
 
         Ensaioa: {{ensaioa}}<br/><br/>
 
-        Hasiera Data: {{hasieraData}}<br/><br/>
-
-        Bukaera Data: {{bukaeraData}}<br/><br/>
+        Dispentsazioaren Data: {{bukaeraData}}<br/><br/>
 
         Pazientea: {{pazientea}}<br/><br/>
+
+        Nork dispentsatu du: {{dispentsatzailea}}<br/><br/><br/>
+
+        <b>Medikamentuen informazioa:</b> <br/><br/>
+
+        {% for m in medikamentuen_informazioa %}
+
+            Medikamentua: {{m.medikamentua}}; dosia: {{m.dosia}}
+            <br/>
+        {% endfor %}
 
 
 

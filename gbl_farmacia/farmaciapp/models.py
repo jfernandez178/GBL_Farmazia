@@ -5,19 +5,29 @@ import datetime
 from datetime import date
 import time
 
+
+
 #datu-motak ikusteko:
 #https://docs.djangoproject.com/en/1.7/ref/models/fields/#django.db.models.DateField
+
 
 #Medikamentuari dagokion entitatea eta bere erlazioak
 class Medikamentua(models.Model):
     #ident izango da kode bat medikamentua konkreatua denean, eta izena generikoa denean
-    ident = models.CharField(primary_key=True, max_length=128, unique=True)
-    kit = models.IntegerField()
-    lote = models.IntegerField()
-    kaduzitatea = models.DateField()
-    bidalketaZenbakia = models.IntegerField()
-    bidalketaData = models.DateField()
+    ident = models.CharField(primary_key=True, max_length=128)
+    kit = models.IntegerField(blank=True)
+    lote = models.IntegerField(blank=True)
+    kaduzitatea = models.DateField(blank=True)
+    bidalketaZenbakia = models.IntegerField(blank=True)
+    bidalketaData = models.DateField(blank=True)
+    unitateak = models.IntegerField(default=1)
+    bidalketaOrdua = models.TimeField(blank=True, null=True)
 
+    #aldagai hau izango da primary key-a
+    #horrela, ident-ek, nahiz existitzen diren medikamentuen gainean sobreeskribitzeko balioko du
+    #superident = models.AutoField(primary_key=True)
+
+    
 
 
     def __unicode__(self):
@@ -26,9 +36,9 @@ class Medikamentua(models.Model):
 #Pazienteari dagokion entitatea eta bere erlazioak
 class Pazientea(models.Model):
     ident = models.AutoField(primary_key=True)
-    idensaioan = models.CharField(max_length=128)
-    izena = models.CharField(max_length=128)
-    unitateKlinikoa = models.CharField(max_length=128)
+    idensaioan = models.CharField(max_length=128, blank=True)
+    izena = models.CharField(max_length=128)    
+    unitateKlinikoa = models.CharField(max_length=128, blank=True)
     pisua = models.FloatField()
     #datu gehiago behar badira hemen jartzen dira
     #TODO
@@ -45,20 +55,20 @@ class Ensaioa(models.Model):
 	
 
     #egoera mota nominalekoa izango da: (irekita, itxita)
-    egoera = models.CharField(max_length=128)#, default="espezifikatu gabe")
+    egoera = models.CharField(max_length=128)#, default=1, choices=((1, 'Irekita'), (2, 'Itxita')))#, default="espezifikatu gabe")
     #egoera = ((irekita, 'irekita'), (itxita, 'itxita'))
     hasieraData = models.DateField()#default=datetime.date(1000, 01, 01))
     bukaeraData = models.DateField(blank=True, null=True)#default=datetime.date(1000, 01, 01), blank=True)
     #protokoloZenbakia mota nominalekoa izango da: (I, II, III, IV, V)
-    protokoloZenbakia = models.IntegerField(blank=True)#default=0)
+    protokoloZenbakia = models.IntegerField(blank=True)#, default=1, choices=((1, 'I'), (2, 'II'), (3, 'III'), (4, 'IV'), (5, 'V')))#default=0)
     #protokoloZenbakia = ((I, 'I'), (II, 'II'), (III, 'III'), (IV, 'IV'), (V, 'V'))
 
     titulua = models.CharField(primary_key=True, max_length=128,unique=True)#, default="espezifikatu gabe")
     #zerbitzua mota nominalekoa izan daiteke...
-    zerbitzua = models.CharField(max_length=128)#, default="espezifikatu gabe")
+    zerbitzua = models.CharField(max_length=128)#, default=1, choices=((1, 'zerbitzua1'), (2, 'zerbitzua2')))#, default="espezifikatu gabe")
     promotorea = models.CharField(max_length=128)#, default="espezifikatu gabe")
     #estudioMota klase nominalekoa da? (ciego, doble ciego, etab.)
-    estudioMota = models.CharField(max_length=128)#, default="espezifikatu gabe")
+    estudioMota = models.CharField(max_length=128)#, default=1, choices=((1, 'mota 1'), (2, 'mota 2')))#, default="espezifikatu gabe")
     monitorea = models.CharField(max_length=128)#, default="espezifikatu gabe")
     ikertzailea = models.CharField(max_length=128)#, default="espezifikatu gabe")
     komentarioak = models.CharField(max_length=128, blank=True)#, default="espezifikatu gabe", blank=True)
@@ -86,11 +96,14 @@ class Ensaioa(models.Model):
 #DISPENTSAZIOAK GAKO BAT IZAN BEHARKO LUKE DESBERDINTZEKO
 class Dispentsazioa(models.Model):
 	#TODO...
-    hasieraData = models.DateField()
     bukaeraData = models.DateField()
+    
     ident = models.AutoField(primary_key=True)
     #zein ensaiori dagon asoziatuta gorde behar da
     ensaioa = models.ForeignKey(Ensaioa)
+
+    #Aldagai honek gordeko du nork dispentsatu duen
+    dispentsatzailea = models.CharField(max_length=128)
 
     def __unicode__(self):
         return unicode(self.ident)
@@ -118,7 +131,7 @@ class PazienteDispentsazio(models.Model):
     medikamentua = models.ForeignKey(Medikamentua, null=True)
     dispentsazioa = models.ForeignKey(Dispentsazioa, null=True)
     paziente = models.ForeignKey(Pazientea, null=True)
-    dosia = models.FloatField(null=True, blank=True) 
+    dosia = models.IntegerField(null=True, blank=True) 
     def __unicode__(self):
         return unicode(self.ident)# + "; " + self.medikamentua + "; " + self.dispentsazioa)
 
@@ -126,9 +139,9 @@ class PazienteDispentsazio(models.Model):
 class EnsaioErrezeta(models.Model):
     ident = models.AutoField(primary_key=True)
     ensaioa = models.ForeignKey(Ensaioa, null=True)
-    pazientea = models.ForeignKey(Pazientea)
+    pazientea = models.ForeignKey(Pazientea, null=True)
     preskripzioData = models.DateField(null=True)
-    hurrengoPreskripzioData = models.DateField(null=True)
+    hurrengoPreskripzioData = models.DateField(null=True, blank=True)
 
     #Aldagai honek kontrolatuko du zein erabiltzailek sortu duen errezeta, berak bakarrik modifikatu ahalko duelako
     sortzailea = models.CharField(max_length=128, blank=True, null=True)
@@ -158,7 +171,7 @@ class ErabiltzaileProfila(models.Model):
     izena = models.CharField(max_length=128)
     abizena1 = models.CharField(max_length=128)
     abizena2 = models.CharField(max_length=128)
-    zerbitzua = models.CharField(max_length=128)
+    zerbitzua = models.CharField(max_length=128)#, default=1, choices=((1, 'Farmazia'), (2, 'Medicina')))
     #...???
 
     # Override the __unicode__() method to return out something meaningful!

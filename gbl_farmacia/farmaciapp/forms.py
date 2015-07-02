@@ -5,6 +5,14 @@ from django.contrib.admin.widgets import AdminDateWidget
 from farmaciapp.models import Medikamentua, Pazientea, Dispentsazioa, Ensaioa, ErabiltzaileProfila, PazienteEnsaio, MedikamentuEnsaio, EnsaioErrezeta, PazienteDispentsazio
 
 
+
+
+
+#from suit.widgets import SuitDateWidget, SuitTimeWidget, SuitSplitDateTimeWidget
+#from functools import partial
+#DateInput = partial(forms.DateInput, {'class': 'datepicker'})
+
+
 class ErabiltzaileFormularioa(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput())
 
@@ -22,16 +30,30 @@ class ErabiltzaileProfilFormularioa(forms.ModelForm):
 
 #Ondorengo formularioa ensaio berri bat sortzeko erabiliko da
 class EnsaioBerriFormularioa(forms.ModelForm):
+
+
+    def __init__(self, *args, **kwargs):
+        super(EnsaioBerriFormularioa, self).__init__(*args, **kwargs)
+        # Making name required
+        self.fields['bukaeraData'].required = False
+        self.fields['bukaeraData'].widget = forms.HiddenInput()
+        self.fields['egoera'].widget = forms.HiddenInput()
+        self.fields['egoera'].required = False
+
+
     class Meta:
 		model = Ensaioa
 
 
 #Ondorengo formularioa ensaioen bilaketak egiteko erabiliko da
 class EnsaioBilaketaFormularioa(forms.ModelForm):
+
+
     def __init__(self, *args, **kwargs):
         super(EnsaioBilaketaFormularioa, self).__init__(*args, **kwargs)
         # Making name required
         self.fields['egoera'].required = False
+        self.fields['egoera'].widget = forms.HiddenInput()
         self.fields['hasieraData'].required = False
         self.fields['protokoloZenbakia'].required = False
         self.fields['titulua'].required = False
@@ -46,6 +68,10 @@ class EnsaioBilaketaFormularioa(forms.ModelForm):
 
     class Meta:
         model = Ensaioa
+        #widgets = {
+        #    'hasieraData': SuitSplitDateTimeWidget,
+        #    'bukaeraData': SuitSplitDateTimeWidget,
+        #}
 
 
 class EnsaioBilaketaFormularioa2(forms.ModelForm):
@@ -76,6 +102,9 @@ class MedikamentuBilaketaFormularioa(forms.ModelForm):
         self.fields['kaduzitatea'].required = False
         self.fields['bidalketaZenbakia'].required = False
         self.fields['bidalketaData'].required = False
+        self.fields['bidalketaOrdua'].required = False
+        self.fields['unitateak'].required = False
+        self.fields['unitateak'].widget = forms.HiddenInput()
 
         #self.fields['ensaioa'].widget = forms.HiddenInput()
         
@@ -105,12 +134,16 @@ class ErrezetaBerriFormularioa(forms.ModelForm):
         super(ErrezetaBerriFormularioa, self).__init__(*args, **kwargs)
         # Making name required
         self.fields['ensaioa'].required = True
-        self.fields['pazientea'].required = True
-        self.fields['preskripzioData'].required = True
-        self.fields['hurrengoPreskripzioData'].required = True
+        self.fields['pazientea'].required = False
+        self.fields['preskripzioData'].required = False
+        self.fields['hurrengoPreskripzioData'].required = False
         self.fields['pendiente'].required = False
         self.fields['pendiente'].widget = forms.HiddenInput()
         self.fields['sortzailea'].widget = forms.HiddenInput()
+        self.fields['pazientea'].widget = forms.HiddenInput()
+        self.fields['preskripzioData'].widget = forms.HiddenInput()
+        self.fields['hurrengoPreskripzioData'].widget = forms.HiddenInput()
+
 
 
     class Meta:
@@ -128,7 +161,7 @@ class ErrezetaBerriEnsaiotikFormularioa(forms.ModelForm):
         self.fields['ensaioa'].required = False
         self.fields['pazientea'].required = True
         self.fields['preskripzioData'].required = True
-        self.fields['hurrengoPreskripzioData'].required = True
+        self.fields['hurrengoPreskripzioData'].required = False
         self.fields['pendiente'].required = False
         self.fields['pendiente'].widget = forms.HiddenInput()
         self.fields['ensaioa'].widget = forms.HiddenInput()
@@ -140,9 +173,9 @@ class ErrezetaBerriEnsaiotikFormularioa(forms.ModelForm):
 
 class DispentsazioFormularioa(forms.ModelForm):
     #Bi eremu hauek markatuko dute noiztik norako dispentsazioak ikusi nahi diren
-    dataNoiztik = forms.DateField(widget=AdminDateWidget)
+    dataNoiztik = forms.DateField(widget=AdminDateWidget)#, id='datepicker')
     dataNoiztik.required = False
-    dataNoizArte = forms.DateField(widget=AdminDateWidget)
+    dataNoizArte = forms.DateField(widget=AdminDateWidget)#, id='datepicker')
     dataNoizArte.required = False
     def __init__(self, *args, **kwargs):
         super(DispentsazioFormularioa, self).__init__(*args, **kwargs)
@@ -154,6 +187,8 @@ class DispentsazioFormularioa(forms.ModelForm):
         self.fields['dispentsazioa'].widget = forms.HiddenInput()
         self.fields['ident'].required = False
         self.fields['ident'].widget = forms.HiddenInput()
+        self.fields['dosia'].widget = forms.HiddenInput()
+        self.fields['dosia'].required = False
 
     class Meta:
         model = PazienteDispentsazio
@@ -169,7 +204,7 @@ class ErrezetaModifikatuFormularioa(forms.ModelForm):
 
     preskripzioData = forms.DateField(widget=forms.DateInput())
     hurrengoPreskripzioData = forms.DateField(widget=forms.DateInput())
-    pazientearen_pisua = forms.IntegerField()
+    pazientearen_pisua = forms.FloatField()
     #Hau da adierazteko ez direla derrigorrezkoak eremuak; hau da, hutsik jarri daitezkeela bilaketarako
     def __init__(self, *args, **kwargs):
         super(ErrezetaModifikatuFormularioa, self).__init__(*args, **kwargs)
@@ -177,7 +212,7 @@ class ErrezetaModifikatuFormularioa(forms.ModelForm):
         self.fields['ensaioa'].required = False
         self.fields['pazientea'].required = True
         self.fields['preskripzioData'].required = True
-        self.fields['hurrengoPreskripzioData'].required = True
+        self.fields['hurrengoPreskripzioData'].required = False
         self.fields['pendiente'].required = False
         self.fields['pendiente'].widget = forms.HiddenInput()
         self.fields['ensaioa'].widget = forms.HiddenInput()
@@ -186,3 +221,17 @@ class ErrezetaModifikatuFormularioa(forms.ModelForm):
 
     class Meta:
         model = EnsaioErrezeta
+
+
+class PazienteBerriFormularioa(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(PazienteBerriFormularioa, self).__init__(*args, **kwargs)
+        # Making name required
+        self.fields['idensaioan'].required = False
+        self.fields['idensaioan'].widget = forms.HiddenInput()
+
+
+
+    class Meta:
+        model = Pazientea

@@ -33,12 +33,18 @@
         <div class="row">
          <div class="col-sm-3 col-md-2 sidebar">
         <h3>Erabiltzailea: {{ user.username }}</h3>
-        <li><a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu</a></li>
-        <li><a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu</a></li>
+        <br/><h4>Zerbitzua: {{mota}}</h4>
+        <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu</a><br/>
+        <a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu</a>
         {% if mota == farmazia %}
-            <li><a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a></li>
+            <br/><a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a>
+        {% endif %}
+        {% if mota == admin %}
+            <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a><br/>
+            <a href="/farmaciapp/aukera_menua/erabiltzaile_menua/">Erabiltzaileak Kudeatu</a><br/>
         {% endif %}
         </div>
+
         <br/><br/>
 
 
@@ -64,6 +70,19 @@
             <input class="btn btn-lg btn-primary" type="submit" name="medikamentuak_kontsultatu_botoia" value="Medikamentuak Kontsultatu"/>
            
         </form><br/><br/>
+
+        
+        {% endif %}
+
+        {% if mota == admin %}
+
+        <form id="medikamentuak_kontsultatu" method="post" action="/farmaciapp/aukera_menua/medikamentu_kontsulta/">
+            {% csrf_token %}
+            <input class="btn btn-lg btn-primary" type="submit" name="medikamentuak_kontsultatu_botoia" value="Medikamentuak Kontsultatu"/>
+           
+        </form><br/><br/>
+
+        <input class="btn btn-lg btn-primary" type=button name="botonErabiltzaileakKudeatu" onClick="location.href='/farmaciapp/aukera_menua/erabiltzaile_menua/'" value='Erabiltzaileak Kudeatu'>
 
 
         {% endif %}

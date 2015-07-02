@@ -32,13 +32,19 @@
         <div class="row">
                 <div class="col-sm-3 col-md-2 sidebar">
         <h3>Erabiltzailea: {{ user.username }}</h3>
-        <li><a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu</a></li>
-        <li><a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu</a></li>
-        {% if mota == farmazia %}
-            <li><a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a></li>
-        {% endif %}
-        <li><a href="../">Atzera</a></li>
-        <li><a href="/farmaciapp/aukera_menua">Hasiera</a></li>
+        <br/><h4>Zerbitzua: {{mota}}</h4>
+                <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu</a><br/>
+                <a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu</a><br/>
+                {% if mota == farmazia %}
+                    <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a><br/>
+                {% endif %}
+                {% if mota == admin %}
+                    <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a><br/>
+                    <a href="/farmaciapp/aukera_menua/erabiltzaile_menua/">Erabiltzaileak Kudeatu</a><br/>
+                {% endif %}
+                <br/>
+                <a href="..">Atzera</a><br/>
+                <a href="/farmaciapp/aukera_menua">Hasiera</a>
         </div>
 
 
@@ -55,8 +61,16 @@
                
         <br/>
         <br/>
-        <input class="btn btn-primary" type=button name="botonErrezetaBerria" onClick="location.href='/farmaciapp/aukera_menua/errezeta_sorkuntza/'" value='Errezeta Berria Sortu'>
+        {% if mota != farmazia %}
+
+        
+        
+
+
+
+        <input class="btn btn-primary" type=button name="botonErrezetaBerria" onClick="location.href='/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/'" value='Errezeta Berria Sortu'>
         <br/><br/>
+        {% endif %}
 
         <!--<input class="btn btn-primary" type=button name="botonAtzera" onClick="location.href='../'" value='Atzera'>
         <br/><br/>

@@ -29,6 +29,30 @@
         
          <div class="container-fluid">
         <div class="row">
+          <div class="col-sm-3 col-md-2 sidebar">
+            {% if user.is_authenticated %}
+
+                {% if admin == mota %}
+        
+                <h3>Erabiltzailea: {{ user.username }}</h3>
+                <br/><h4>Zerbitzua: {{mota}}</h4>
+                <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu</a><br/>
+                <a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu</a><br/>
+                
+                <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a><br/>
+                <a href="/farmaciapp/aukera_menua/erabiltzaile_menua/">Erabiltzaileak Kudeatu</a><br/>
+                
+
+                {% endif %}
+
+            {% endif %}
+                <br/>
+                <a href="/farmaciapp/">Atzera</a><br/>
+                <a href="/farmaciapp/">Hasiera</a>
+
+        </div>
+
+
             <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
         <h1>Erregistratu zaitez</h1>
 
@@ -51,7 +75,7 @@
             {{ erabiltzaile_profil_form.as_p }}
 
             <!-- Provide a button to click to submit the form. -->
-            <input type="submit" name="submit" value="Erregistratu" />
+            <input class="btn btn-primary" type="submit" name="submit" value="Erregistratu" />
         </form>
         {% endif %}
 

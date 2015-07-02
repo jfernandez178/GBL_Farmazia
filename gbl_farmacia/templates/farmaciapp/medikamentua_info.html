@@ -32,13 +32,19 @@
         <div class="row">
                <div class="col-sm-3 col-md-2 sidebar">
         <h3>Erabiltzailea: {{ user.username }}</h3>
-        <li><a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu</a></li>
-        <li><a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu</a></li>
-        {% if mota == farmazia %}
-            <li><a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a></li>
-        {% endif %}
-        <li><a href="../..">Atzera</a></li>
-        <li><a href="/farmaciapp/aukera_menua">Hasiera</a></li>
+        <br/><h4>Zerbitzua: {{mota}}</h4>
+                <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu</a><br/>
+                <a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu</a><br/>
+                {% if mota == farmazia %}
+                    <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a><br/>
+                {% endif %}
+                {% if mota == admin %}
+                    <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a><br/>
+                    <a href="/farmaciapp/aukera_menua/erabiltzaile_menua/">Erabiltzaileak Kudeatu</a><br/>
+                {% endif %}
+                <br/>
+                <a href="../..">Atzera</a><br/>
+                <a href="/farmaciapp/aukera_menua">Hasiera</a>
         </div>
 
 
@@ -46,7 +52,7 @@
 
         <br/><br/>
 
-        {% if mota == farmazia %}
+        {% if mota == farmazia  or mota == admin %}
 
         Medikamentua: {{ident}}<br/><br/>
 
@@ -59,6 +65,10 @@
         Bidalketa Zenbakia: {{bidalketaZenbakia}}<br/><br/>
 
         Bidalketa Data: {{bidalketaData}}<br/><br/>
+
+        Bidalketa Ordua: {{bidalketaOrdua}}<br/><br/>
+
+        Unitateak Stock-ean: {{unitateak}}<br/><br/>
 
         
         <br/><br/>

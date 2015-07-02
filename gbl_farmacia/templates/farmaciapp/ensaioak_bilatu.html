@@ -1,10 +1,28 @@
 <!DOCTYPE html>
+{% load static %}
 <html>
     <head>
          <link rel="icon" href="http://getbootstrap.com/favicon.ico">
         <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="http://getbootstrap.com/examples/dashboard/dashboard.css" rel="stylesheet">
         <!-- Is anyone getting tired of repeatedly entering the header over and over?? -->
+      
+        <script src="{% static "js/jquery-1.11.1.js" %}"></script>
+        <script src="{% static "js/jquery-farmaciapp.js" %}"></script>
+
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+  <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+  <link rel="stylesheet" href="/resources/demos/style.css">
+  <script>
+  $(function() {
+    $( ".DateField" ).datepicker();
+  });
+  </script>
+
+
+
+
         <title>Ensaio-Bilaketa</title>
     </head>
 
@@ -32,13 +50,19 @@
         <div class="row">
                 <div class="col-sm-3 col-md-2 sidebar">
         <h3>Erabiltzailea: {{ user.username }}</h3>
-        <li><a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu</a></li>
-        <li><a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu</a></li>
-        {% if mota == farmazia %}
-            <li><a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a></li>
-        {% endif %}
-        <li><a href="../">Atzera</a></li>
-        <li><a href="/farmaciapp/aukera_menua">Hasiera</a></li>
+        <br/><h4>Zerbitzua: {{mota}}</h4>
+                <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu</a><br/>
+                <a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu</a><br/>
+                {% if mota == farmazia %}
+                    <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a><br/>
+                {% endif %}
+                {% if mota == admin %}
+                    <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a><br/>
+                    <a href="/farmaciapp/aukera_menua/erabiltzaile_menua/">Erabiltzaileak Kudeatu</a><br/>
+                {% endif %}
+                <br/>
+                <a href="..">Atzera</a><br/>
+                <a href="/farmaciapp/aukera_menua">Hasiera</a>
         
         </div>
 
@@ -46,6 +70,9 @@
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
         <br/><br/> 
 
+
+
+        <p>Date: <input type="text" id="datepicker"></p>
         <form id="ensaioak_bilatu" method="POST" action="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/" enctype="multipart/form-data">
             
             {% csrf_token %}
@@ -67,7 +94,7 @@
 
 
 
-        {% if mota == farmazia %}
+        {% if mota == admin %}
 
         <form id="ensaio_ezabaketa" action="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ezabatu/" method="POST">
         
@@ -76,7 +103,7 @@
             {% for e in bilaketa_emaitzak %}
 
 
-                <input type="checkbox" name="ensaioa" id="ensaioa" value={{e.titulua}} />
+                <input type="checkbox" name="ensaioa" id="ensaioa" value="{{e.titulua}}" />
                 <label for="ensaioa"><b><a href="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{ e.titulua }}">{{ e.titulua }}</a></b></label><br />
 
                             <!--<li class="active"><li>
@@ -95,8 +122,7 @@
         {% for e in bilaketa_emaitzak %}
 
 
-               <li>
-                    <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{ e.titulua }}">{{ e.titulua }}</a></li>
+               <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{ e.titulua }}">{{ e.titulua }}</a><br/>
         {% endfor %}
 
 

@@ -23,13 +23,9 @@
         </div>
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu</a></li>
-                <li><a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu</a></li>
-                {% if mota == farmazia %}
-                    <li><a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a></li>
-                {% endif %}
                 <li><a href="/farmaciapp/">Hasiera</a></li>
                 <li><a href="/farmaciapp/logout/">Sesioa itxi</a><br/></li>
+                
 
             </ul>
         </div></div></div>
@@ -38,19 +34,33 @@
         <div class="row">
                 <div class="col-sm-3 col-md-2 sidebar">
         <h3>Erabiltzailea: {{ user.username }}</h3>
-        <li><a href="../">Atzera</a></li>
-        <li><a href="/farmaciapp/aukera_menua">Hasiera</a></li>
+        <br/><h4>Zerbitzua: {{mota}}</h4>
+                <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu</a><br/>
+                <a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu</a><br/>
+                {% if mota == farmazia %}
+                    <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a><br/>
+                {% endif %}
+                {% if mota == admin %}
+                    <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a><br/>
+                    <a href="/farmaciapp/aukera_menua/erabiltzaile_menua/">Erabiltzaileak Kudeatu</a><br/>
+                {% endif %}
+                <br/>
+                <a href="..">Atzera</a><br/>
+                <a href="/farmaciapp/aukera_menua">Hasiera</a>
         </div>
 
 
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
             <br/><br/>
 
-        {% if mota == farmazia %}
+
+        {% if mota == farmazia or mota == admin %}
+        Medikamentuen zerrenda:
+        <br/><br/>
 
         <!--TODO-->
         {% for m in medikamentuen_lista %}
-            <li class="active"><li>
+            <li>
                     {{ m.medikamentua }}</a></li>
         {% endfor %}
         <br/><br/>
@@ -64,6 +74,9 @@
         </form>
 
         {% endif %}
+
+        <br/><br/>
+        {{mezua}}
 
 
 
