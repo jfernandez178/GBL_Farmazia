@@ -7,12 +7,21 @@
         <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="http://getbootstrap.com/examples/dashboard/dashboard.css" rel="stylesheet">
         <!-- Is anyone getting tired of repeatedly entering the header over and over?? -->
+      
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+  <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+  <link rel="stylesheet" href="/resources/demos/style.css">
+  <script>
+  $(function() {
+    $( ".vDateField" ).datepicker({ dateFormat: 'yy-mm-dd' }).val();
+  });
+  </script>
+  
         <title>Ensaio Berria</title>
     </head>
 
     <body>
-        <script src="{% static "js/jquery-1.11.1.js" %}"></script>
-        <script src="{% static "js/jquery-farmaciapp.js" %}"></script>
         
 
 
@@ -39,19 +48,19 @@
         <div class="row">
                 <div class="col-sm-3 col-md-2 sidebar">
         <h3>Erabiltzailea: {{ user.username }}</h3>
-        <br/><h4>Zerbitzua: {{mota}}</h4>
-                <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu</a><br/>
-                <a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu</a><br/>
+        <h4>Zerbitzua: {{mota}}</h4><br/>
+                <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu  <span class="glyphicon glyphicon-book" aria-hidden="true"></span></a><br/>
+                <a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu  <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span></a><br/>
                 {% if mota == farmazia %}
-                    <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a><br/>
+                    <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu  <span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a><br/>
                 {% endif %}
                 {% if mota == admin %}
-                    <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu</a><br/>
-                    <a href="/farmaciapp/aukera_menua/erabiltzaile_menua/">Erabiltzaileak Kudeatu</a><br/>
+                    <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu  <span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a><br/>
+                    <a href="/farmaciapp/aukera_menua/erabiltzaile_menua/">Erabiltzaileak Kudeatu  <span class="glyphicon glyphicon-user" aria-hidden="true"></span></a><br/>
                 {% endif %}
                 <br/>
-                <a href="..">Atzera</a><br/>
-                <a href="/farmaciapp/aukera_menua">Hasiera</a>
+                <a href="javascript:history.back()">Atzera  <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span></a><br/>
+                <a href="/farmaciapp/aukera_menua">Hasiera  <span class="glyphicon glyphicon-home" aria-hidden="true"></span></a>
         </div>
 
 
@@ -61,7 +70,12 @@
         {% if mota == admin %}
 
         {% if sortuta %}
-        Ensaioa ondo sortu da!<br/><br/>
+        <div class="alert alert-success" role="alert">
+          <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+          <span class="sr-only">Informazioa: </span>
+            Ensaioa ondo sortu da!
+        </div>
+        <br/><br/>
         <input type=button class="btn btn-primary" name="botonMedikamentuakGehituEnsaioari" onClick="location.href='/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{ensaioa_titulua}}/'" value='Ensaio Berria Ikusi Medikamentuak Gehitzeko'>
         
         {% else %}

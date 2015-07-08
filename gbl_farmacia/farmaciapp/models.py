@@ -127,7 +127,8 @@ class MedikamentuEnsaio(models.Model):
 		return unicode(self.medikamentua)# + "; " + self.ensaioa)
 
 class PazienteDispentsazio(models.Model):
-    ident = models.IntegerField(primary_key=True)
+    identBi = models.AutoField(primary_key=True)
+    ident = models.IntegerField(default=1)
     medikamentua = models.ForeignKey(Medikamentua, null=True)
     dispentsazioa = models.ForeignKey(Dispentsazioa, null=True)
     paziente = models.ForeignKey(Pazientea, null=True)
@@ -148,6 +149,9 @@ class EnsaioErrezeta(models.Model):
 
     #Aldagai honek esango du ea errezeta 'pendiente' egoeran dagoen edo ez
     pendiente = models.CharField(max_length=128, default='Pendiente')
+
+    #Eremu zabal bat izango da nahi diren eremuak adierazteko
+    gainontzekoEremuak = models.TextField(null=True, blank=True)
 	
     def __unicode__(self):
 		return unicode(self.ident)# + "; " + self.preskripzioData + "; " + self.pazientea)

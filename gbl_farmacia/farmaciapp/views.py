@@ -9,6 +9,12 @@ from django.contrib.auth.models import User
 import datetime
 from dateutil import parser
 import time
+
+#PDF dokumentuen sorrerarako beharrezkoak
+from reportlab.pdfgen import canvas
+from django.http import HttpResponse
+from io import BytesIO
+
 #Orrialde nagusia
 def index(request):
     #Hitzarmen batek adosten du parametro hori request deitu behar dela (HTTPRequest motakoa)
@@ -425,30 +431,30 @@ def dispentsazioak_aztertu(request, ensaioa_titulua):
             #Paziente konkretu bat espezifikatu baldin bada
             if paziente_id != -1:
                 if (flagNoiztik and flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']) and Q(paziente__ident=pazientea_id))
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']) and Q(paziente__ident=pazientea_id)).values('paziente', 'ident').distinct()
                     flag = 'if1'
                 if (not flagNoiztik and flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']) and Q(paziente__ident=pazientea_id))
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']) and Q(paziente__ident=pazientea_id)).values('paziente', 'ident').distinct()
                     flag = 'if2'
                 if (flagNoiztik and not flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(paziente__ident=pazientea_id))
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(paziente__ident=pazientea_id)).values('paziente', 'ident').distinct()
                     flag = 'if3'
                 if (not flagNoiztik and not flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(paziente__ident=pazientea_id))
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(paziente__ident=pazientea_id)).values('paziente', 'ident').distinct()
                     flag = pazienteaEnsaioan
             
             else:
                 if (flagNoiztik and flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']))
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte'])).values('paziente', 'ident').distinct()
                     flag = 'if1'
                 if (not flagNoiztik and flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']))
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte'])).values('paziente', 'ident').distinct()
                     flag = 'if2'
                 if (flagNoiztik and not flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']))
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik'])).values('paziente', 'ident').distinct()
                     flag = 'if3'
                 if (not flagNoiztik and not flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan))
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan)).values('paziente', 'ident').distinct()
                     flag = pazienteaEnsaioan
 
 
@@ -493,19 +499,22 @@ def dispentsazioa_info(request, ensaioa_titulua, dispentsazioa_ident):
     context_dict['ensaioa'] = ensaioa_titulua
     context_dict['dispentsatzailea'] = None
 
-    context_dict['medikamentuen_informazioa'] = ensaioa_titulua
+    context_dict['medikamentuen_informazioa'] = None
     
     context_dict['bukaeraData'] = None
     context_dict['pazientea'] = None
     context_dict['farmazia'] = 'Farmazia'
     context_dict['mota'] = ErabiltzaileProfila.objects.filter(Q(erabiltzailea=request.user))[0].zerbitzua
     context_dict['admin'] = 'admin'
+
+    #Dispentsazio horren errezetaren informazioa lortu beharko litzateke
+    context_dict['gainontzekoEremuak'] = None
     
     
       
     try:
-        paz_dis = PazienteDispentsazio.objects.get(dispentsazioa__ident=dispentsazioa_ident)
-        paziente_id = paz_dis.paziente
+        paz_dis = PazienteDispentsazio.objects.filter(dispentsazioa__ident=dispentsazioa_ident)
+        paziente_id = paz_dis[0].paziente
 
         #Dispentsatu diren medikamentuak eskuratuko ditugu
         paziente_dispentsazioak = PazienteDispentsazio.objects.filter(dispentsazioa__ident=dispentsazioa_ident, paziente=paziente_id)
@@ -517,6 +526,8 @@ def dispentsazioa_info(request, ensaioa_titulua, dispentsazioa_ident):
         context_dict['pazientea'] = paziente_id
         context_dict['dispentsatzailea'] = Dispentsazioa.objects.get(ident=dispentsazioa_ident).dispentsatzailea
        
+        errezeta = EnsaioErrezeta.objects.get(ident=dispentsazioa_ident)
+        context_dict['gainontzekoEremuak'] = errezeta.gainontzekoEremuak
         
 
     except PazienteDispentsazio.DoesNotExist:
@@ -619,6 +630,56 @@ def errezeta_sortu_ensaiotik_botoia(request, ensaioa_titulua):
 
 
 @login_required
+def medikamentua_ezabatu(request, medikamentua_ident):
+    #Medikamentua ezabatuko da bai Stock-etik eta bai erlazionatuta dagoen ensaio eta errezetetatik
+    medikamentua = Medikamentua.objects.get(ident=medikamentua_ident)
+    medikamentua.delete()
+
+    #Jakiteko zein motako erabiltzailea den
+    erabiltzaile_mota = ErabiltzaileProfila.objects.filter(erabiltzailea=request.user)[0].zerbitzua
+    #aldagai hau erabiliko da html-an konprobazioa egiteko
+    farmazia = 'Farmazia'
+
+    context_dict = {}
+    context_dict['mota'] = erabiltzaile_mota
+    context_dict['farmazia'] = farmazia
+    context_dict['admin'] = 'admin'
+    context_dict['ezabatuta'] = True
+
+
+    return render(request, 'farmaciapp/medikamentua_info.html', context_dict)
+
+
+
+
+
+
+@login_required
+def medikamentua_kendu_ensaiotik(request, ensaioa_titulua, medikamentua_ident):
+    #Medikamentua kenduko da ensaiotik, baina Stock-ean mantenduko da
+    medikamentua = MedikamentuEnsaio.objects.get(medikamentua=medikamentua_ident)
+    medikamentua.delete()
+
+    #zeintzuk medikamentu dituen agertuko da lehenik
+    ensaioa = Ensaioa.objects.get(titulua=ensaioa_titulua)
+    medikamentuen_lista = MedikamentuEnsaio.objects.filter(Q(ensaioa=ensaioa))#.values('medikamentua').distinct()
+    
+    #Jakiteko zein motako erabiltzailea den
+    erabiltzaile_mota = ErabiltzaileProfila.objects.filter(erabiltzailea=request.user)[0].zerbitzua
+    #aldagai hau erabiliko da html-an konprobazioa egiteko
+    farmazia = 'Farmazia'
+    admin = 'admin'
+    mezua = 'Medikamentua ondo ezabatu da'
+    medikamentua_form = MedikamentuBerriFormularioa()
+
+
+
+    #Ensaioari medikamentuak gehitzeaz arduratuko den orrialdera eramango gaitu
+    return render(request, 'farmaciapp/medikamentuak_gehitu_ensaioari.html', {'mezua':mezua, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'medikamentua_form':medikamentua_form, 'medikamentuen_lista': medikamentuen_lista, 'titulua':ensaioa_titulua})
+
+
+
+@login_required
 def medikamentuak_gehitu_ensaioari_botoia(request, ensaioa_titulua):
     #TODO
     mezua = ''
@@ -631,35 +692,58 @@ def medikamentuak_gehitu_ensaioari_botoia(request, ensaioa_titulua):
             # If the form is valid...
 
             if medikamentua_form.is_valid():
-                mezua = 'if1'
+                #mezua = 'if1'
                 if request.POST['ident'] != '':
-                    mezua = 'if2'
+                    #mezua = 'if2'
                     try:
-                        mezua = 'try'
+                        #Medikamentua existitzen bada, informazioa eguneratuko zaio
+                        #mezua = 'try'
                         medikamentua_konprobatu = Medikamentua.objects.get(ident=request.POST['ident'])
                         zenbat_unitate = int(medikamentua_konprobatu.unitateak)
                         mezua = zenbat_unitate
                         zenbat_unitate = zenbat_unitate + int(request.POST['unitateak'])
                         mezua = zenbat_unitate
                         medikamentua_konprobatu.unitateak = zenbat_unitate
-                        if request.POST['bidalketaOrdua'] != '':
-                            bidalketa_ordu_berria = parser.parse(request.POST['bidalketaOrdua']).date()
-                            bidalketa_ordu_berria = bidalketa_ordu_berria.strftime('%H-%M')
+                        
+                        #Orain konprobatzen da ea erabiltzaileak ordua espezifikatu duen edo ez
+                        if request.POST['ordua'] != '' and request.POST['minutuak'] != '':
+                            #Ordua espezifikatu badu
+                            ordua = request.POST['ordua']
+                            minutuak = request.POST['minutuak']
+                            ordu_berria_string = ordua + ':' + minutuak
+                            bidalketa_ordu_berria = parser.parse(ordu_berria_string).date()
+                            bidalketa_ordu_berria = bidalketa_ordu_berria.strftime('%H:%M')
 
                             medikamentua_konprobatu.bidalketaOrdua = bidalketa_ordu_berria
+
                         medikamentua_konprobatu.save()
                     except:
-                        mezua = 'except'
+                        #Medikamentua ez bada existitzen, medikamentu berria erregistratuko da
+
+                        #mezua = 'except'
                         #mezua = Medikamentua.objects.get(ident=request.POST['ident'])
                         # Save the user's form data to the database.
                         #errezeta_form.ensaioa = ensaioa_titulua
-                        medikamentua = medikamentua_form.save()
+                        medikamentua = medikamentua_form.save(commit=False)
+
+                        #Orain konprobatzen da ea erabiltzaileak ordua espezifikatu duen edo ez
+                        if request.POST['ordua'] != '' and request.POST['minutuak'] != '':
+                            #Ordua espezifikatu badu
+                            ordua = request.POST['ordua']
+                            minutuak = request.POST['minutuak']
+                            ordu_berria_string = ordua + ':' + minutuak
+                            bidalketa_ordu_berria = parser.parse(ordu_berria_string).date()
+                            bidalketa_ordu_berria = bidalketa_ordu_berria.strftime('%H:%M')
+
+                            medikamentua.bidalketaOrdua = bidalketa_ordu_berria
+
                         medikamentua.save()
 
                         #Orain medikamentuEnsaio modeloaren instantzia bat sortu behar da, erlazioa egiteko
                         ensaioa = Ensaioa.objects.get(titulua=ensaioa_titulua)
                         medikamentuEnsaio = MedikamentuEnsaio(medikamentua=medikamentua, ensaioa=ensaioa)
                         medikamentuEnsaio.save()
+                        mezua = 'Medikamentua gehitu da ensaioan'
 
                         
                     # Update our variable to tell the template registration was successful.
@@ -676,17 +760,36 @@ def medikamentuak_gehitu_ensaioari_botoia(request, ensaioa_titulua):
                 #    unitateak_stocken = unitateak_stocken + int(request.POST['unitateak'])
                 #    medikamentu_konprobazioa.save()
                 #except:    
-                
+
+
                 medikamentua_konprobatu = Medikamentua.objects.get(ident=request.POST['ident'])
+
+                #Ensaio horrek medikamentu hau daukan konprobatzen da
+                try:
+                    ensaioak_badu_medikamentua = MedikamentuEnsaio.objects.get(ensaioa=ensaioa_titulua, medikamentua=request.POST['ident'])
+                except:
+                    #Ez badauka medikamentu hau, gehitu egin behar zaio
+                    ensaioa = Ensaioa.objects.get(titulua=ensaioa_titulua)
+                    
+                    ensaioak_badu_medikamentua = MedikamentuEnsaio(ensaioa=ensaioa, medikamentua=medikamentua_konprobatu)
+                    ensaioak_badu_medikamentua.save()
+
+                    
                 zenbat_unitate = int(medikamentua_konprobatu.unitateak)
                 
                 zenbat_unitate = zenbat_unitate + int(request.POST['unitateak'])
                 
                 medikamentua_konprobatu.unitateak = zenbat_unitate
-                if request.POST['bidalketaOrdua'] != '':
-                    bidalketa_ordu_berria = parser.parse(request.POST['bidalketaOrdua']).date()
+                #Orain konprobatzen da ea erabiltzaileak ordua espezifikatu duen edo ez
+                if request.POST['ordua'] != '' and request.POST['minutuak'] != '':
+                    #Ordua espezifikatu badu
+                    ordua = int(request.POST['ordua'])
+                    minutuak = int(request.POST['minutuak'])
+                    ordu_berria_string = ordua + '-' + minutuak
+                    bidalketa_ordu_berria = parser.parse(ordu_berria_string).date
                     bidalketa_ordu_berria = bidalketa_ordu_berria.strftime('%H:%M')
                     medikamentua_konprobatu.bidalketaOrdua = bidalketa_ordu_berria
+                            
                 medikamentua_konprobatu.save()
 
                 mezua = 'Medikamentuaren informazioa eguneratu da'
@@ -936,30 +1039,30 @@ def itxitako_ensaioen_dispentsazioak(request, ensaioa_titulua):
             #Paziente konkretu bat espezifikatu baldin bada
             if paziente_id != -1:
                 if (flagNoiztik and flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']) and Q(paziente__ident=pazientea_id))
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']) and Q(paziente__ident=pazientea_id)).values('paziente', 'ident').distinct()
                     flag = 'if1'
                 if (not flagNoiztik and flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']) and Q(paziente__ident=pazientea_id))
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']) and Q(paziente__ident=pazientea_id)).values('paziente', 'ident').distinct()
                     flag = 'if2'
                 if (flagNoiztik and not flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(paziente__ident=pazientea_id))
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(paziente__ident=pazientea_id)).values('paziente', 'ident').distinct()
                     flag = 'if3'
                 if (not flagNoiztik and not flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(paziente__ident=pazientea_id))
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(paziente__ident=pazientea_id)).values('paziente', 'ident').distinct()
                     flag = pazienteaEnsaioan
             
             else:
                 if (flagNoiztik and flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']))
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte'])).values('paziente', 'ident').distinct()
                     flag = 'if1'
                 if (not flagNoiztik and flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']))
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte'])).values('paziente', 'ident').distinct()
                     flag = 'if2'
                 if (flagNoiztik and not flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']))
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik'])).values('paziente', 'ident').distinct()
                     flag = 'if3'
                 if (not flagNoiztik and not flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan))
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan)).values('paziente', 'ident').distinct()
                     flag = pazienteaEnsaioan
 
 
@@ -988,7 +1091,6 @@ def itxitako_ensaioen_dispentsazioak(request, ensaioa_titulua):
 
 
     # Render the template depending on the context.
-    #Honek eramango gaitu medikamentuen bilaketa emaitza erakutsiko duen orrialdera
     return render(request,
             'farmaciapp/itxitako_dispentsazioak_aztertu.html',
             {'admin':admin, 'farmazia':farmazia, 'mota':erabiltzaile_mota, 'pazienteidreal':pazienteidreal, 'noiztik': noiztik, 'noizarte': noizarte, 'flag': flag, 'paziente_id': paziente_id, 'pazientea': pazienteaEnsaioan, 'ensaioa': ensaioa_titulua, 'bilaketa_emaitzak': bilaketa_emaitzak, 'dispentsazio_form': dispentsazio_form, 'ensaioa_titulua':ensaioa_titulua} )
@@ -1008,18 +1110,30 @@ def itxitako_dispentsazioaren_info(request, ensaioa_titulua, dispentsazioa_ident
     context_dict['admin'] = 'admin'
     context_dict['farmazia'] = 'Farmazia'
     context_dict['dispentsatzailea'] = None
+    context_dict['medikamentuen_informazioa'] = None
+
+    #Dispentsazio horren errezetaren informazioa lortu beharko litzateke
+    context_dict['gainontzekoEremuak'] = None
+
+
     
       
     try:
-        paz_dis = PazienteDispentsazio.objects.get(dispentsazioa__ident=dispentsazioa_ident)
-        paziente_id = paz_dis.paziente
+        paz_dis = PazienteDispentsazio.objects.filter(dispentsazioa__ident=dispentsazioa_ident)
+        paziente_id = paz_dis[0].paziente
 
+        #Dispentsatu diren medikamentuak eskuratuko ditugu
+        paziente_dispentsazioak = PazienteDispentsazio.objects.filter(dispentsazioa__ident=dispentsazioa_ident, paziente=paziente_id)
+        context_dict['medikamentuen_informazioa'] = paziente_dispentsazioak
+    
         context_dict['dispentsazioa'] = dispentsazioa_ident
         context_dict['ensaioa'] = ensaioa_titulua
         context_dict['bukaeraData'] = Dispentsazioa.objects.get(ident=dispentsazioa_ident).bukaeraData
         context_dict['pazientea'] = paziente_id
         context_dict['dispentsatzailea'] = Dispentsazioa.objects.get(ident=dispentsazioa_ident).dispentsatzailea
-
+       
+        errezeta = EnsaioErrezeta.objects.get(ident=dispentsazioa_ident)
+        context_dict['gainontzekoEremuak'] = errezeta.gainontzekoEremuak
         
        
 
@@ -1130,6 +1244,7 @@ def medikamentua_info(request, medikamentua_ident):
     context_dict['bidalketaData'] = None
     context_dict['bidalketaOrdua'] = None
     context_dict['unitateak'] = None
+    context_dict['ezabatuta'] = False
 
     #Jakiteko zein motako erabiltzailea den
     erabiltzaile_mota = ErabiltzaileProfila.objects.filter(erabiltzailea=request.user)[0].zerbitzua
@@ -1303,6 +1418,7 @@ def errezeta_info(request, errezeta_ident):
     context_dict['preskripzioData'] = None
     context_dict['hurrengoPreskripzioData'] = None
     context_dict['paziente_pisua'] = None
+    context_dict['gainontzekoEremuak'] = None
     context_dict['ensaioaren_medikamentuak'] = None
 
     #Dosiaren kalkulua: TODO
@@ -1323,11 +1439,13 @@ def errezeta_info(request, errezeta_ident):
 
         #Jakiteko zein erabiltzailek sortu duen errezeta
         context_dict['errezetaren_sortzailea'] = errezeta.sortzailea
-        context_dict['errezeta_form'] = ErrezetaModifikatuFormularioa(initial={'ensaioa':errezeta.ensaioa, 'pazientea':errezeta.pazientea, 'pazientearen_pisua':pazientea.pisua, 'preskripzioData':errezeta.preskripzioData, 'hurrengoPreskripzioData':errezeta.hurrengoPreskripzioData})
+        context_dict['errezeta_form'] = ErrezetaModifikatuFormularioa(initial={'ensaioa':errezeta.ensaioa, 'pazientea':errezeta.pazientea, 'pazientearen_pisua':pazientea.pisua, 'preskripzioData':errezeta.preskripzioData, 'hurrengoPreskripzioData':errezeta.hurrengoPreskripzioData, 'gainontzekoEremuak':errezeta.gainontzekoEremuak})
 
         #Ensaio horren medikamentuak bilatuko ditugu, gero aukeratzeko zeintzuk nahi diren dispentsatu
         ensaioarenMedikamentuak = MedikamentuEnsaio.objects.filter(ensaioa=errezeta.ensaioa)
         context_dict['ensaioaren_medikamentuak'] = ensaioarenMedikamentuak
+
+        context_dict['gainontzekoEremuak'] = errezeta.gainontzekoEremuak
 
     except EnsaioErrezeta.DoesNotExist:
         pass
@@ -1350,7 +1468,26 @@ def errezeta_onartu(request, errezeta_ident):
     #TODO
     #Hemen errezeta onartu beharko litzateke Farmazeutikoaren bidez, dispentsaziorako beharrezko informazioa gehituz
     #Hori falta da...
+    mezua = ''
+    ensaioa = ''
+    pazientea_ident = ''
+    preskripzioData = ''
+    hurrengoPreskripzioData = ''
+    pazientea = ''
+    paziente_pisua = ''
+    errezetaren_sortzailea = ''
+    gainontzekoEremuak = ''
+    ensaioaren_medikamentuak = ''
 
+
+
+
+    #Aldagai honek adieraziko du gaizki joan den edo ez dispentsazioa
+    #Beharbada medikamenturen baten faltan edo
+    gaizkiJoanDa = False
+    eguneraketa = False
+
+    errezeta_form = None
 #----------------------------------------------------------------------
 
     #CheckBox-ean aukeratuta dauden elementuak kargatuko ditu
@@ -1365,6 +1502,7 @@ def errezeta_onartu(request, errezeta_ident):
         #Errezetaren egoera 'Pendiente'-tik 'Dispentsatuta'-ra pasatu behar da
         ensaio_errezeta = EnsaioErrezeta.objects.get(ident=errezeta_ident)
         ensaio_errezeta.pendiente = 'Dispentsatuta'
+        ensaio_errezeta.gainontzekoEremuak = request.POST['gainontzekoEremuak']
         ensaio_errezeta.save()
 
         ensaioa = Ensaioa.objects.get(titulua=request.POST['ensaioa'])
@@ -1387,8 +1525,12 @@ def errezeta_onartu(request, errezeta_ident):
             paziente_ensaio = PazienteEnsaio(pazientea=pazientea, ensaioa=ensaioa)
             paziente_ensaio.save()
 
-
+        
         dispentsatu_beharreko_medikamentu_lista = request.POST.getlist('medikamentua')
+        mezua = dispentsatu_beharreko_medikamentu_lista
+
+
+
         for dispentsatzeko_medikamentua in dispentsatu_beharreko_medikamentu_lista:
             #Orain aukeratutako medikamentu bakoitzaren unitateak hartzen dira
             medikamentuaren_unitateak = int(request.POST[dispentsatzeko_medikamentua])
@@ -1405,8 +1547,40 @@ def errezeta_onartu(request, errezeta_ident):
             medikamentua.unitateak = medikamentua.unitateak - medikamentuaren_unitateak
             medikamentua.save()
 
+            #Bakarrik onartuko da dispentsazioa medikamenturen bat dispentsatu bazaio
+            onartuta = True
 
-        onartuta = True
+        if not onartuta:
+            mezua = "Medikamentu bat dispentsatu behar zaio gutxienez"
+            gaizkiJoanDa = True
+           
+            try:
+
+
+                errezeta = EnsaioErrezeta.objects.get(ident=errezeta_ident)
+                ensaioa = errezeta.ensaioa
+                pazientea_ident = errezeta.pazientea
+                preskripzioData = errezeta.preskripzioData
+                hurrengoPreskripzioData = errezeta.hurrengoPreskripzioData
+                #Dosiaren kalkulua: TODO
+                
+                pazientea = Pazientea.objects.get(ident=errezeta.pazientea.ident)
+                paziente_pisua = pazientea.pisua
+                pazientea = pazientea
+
+                #Jakiteko zein erabiltzailek sortu duen errezeta
+                errezetaren_sortzailea = errezeta.sortzailea
+                
+                errezeta_form = ErrezetaModifikatuFormularioa(initial={'ensaioa':errezeta.ensaioa, 'pazientea':errezeta.pazientea, 'pazientearen_pisua':pazientea.pisua, 'preskripzioData':errezeta.preskripzioData, 'hurrengoPreskripzioData':errezeta.hurrengoPreskripzioData, 'gainontzekoEremuak':errezeta.gainontzekoEremuak})
+
+                #Ensaio horren medikamentuak bilatuko ditugu, gero aukeratzeko zeintzuk nahi diren dispentsatu
+                ensaioarenMedikamentuak = MedikamentuEnsaio.objects.filter(ensaioa=errezeta.ensaioa)
+                ensaioaren_medikamentuak = ensaioarenMedikamentuak
+
+                gainontzekoEremuak = errezeta.gainontzekoEremuak
+
+            except EnsaioErrezeta.DoesNotExist:
+                pass
 
 #----------------------------------------------------------------------
 
@@ -1456,14 +1630,15 @@ def errezeta_onartu(request, errezeta_ident):
     errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
 
 
-    return render(request, 'farmaciapp/errezeta_info.html', {'onartuta':onartuta, 'admin':admin, 'errezeta_pendienteak': errezeta_pendienteak, 'mota':erabiltzaile_mota, 'farmazia':farmazia})
+    return render(request, 'farmaciapp/errezeta_info.html', {'gaizkiJoanDa':gaizkiJoanDa, 'eguneraketa':eguneraketa, 'errezeta_form':errezeta_form, 'mezua':mezua, 'onartuta':onartuta, 'admin':admin, 'errezeta_pendienteak': errezeta_pendienteak, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'gainontzekoEremuak':gainontzekoEremuak, 'ensaioa':ensaioa, 'pazientea_ident':pazientea_ident, 'preskripzioData':preskripzioData, 'hurrengoPreskripzioData':hurrengoPreskripzioData, 'pazientea':pazientea, 'paziente_pisua':paziente_pisua, 'errezetaren_sortzailea':errezetaren_sortzailea, 'ensaioaren_medikamentuak':ensaioaren_medikamentuak})
 
 
 @login_required
 def errezeta_modifikatu(request, errezeta_ident):
     #Hemen aurretik zeuzkan datuan jarriko ditugu eta aukera emango zaio erabiltzaileari aldatzeko
-    mezua = False
+    eguneraketa = False
     sortzailea = ''
+
     # If it's a HTTP POST, we're interested in processing form data.
     if request.method == 'POST':
         sortzailea = request.POST['errezetaren_sortzailea']
@@ -1478,7 +1653,7 @@ def errezeta_modifikatu(request, errezeta_ident):
             try:
                 #Balio berriekin moldatu nahi den errezeta existitzen den edo ez konprobatuko da
                 ensaioerrezeta = EnsaioErrezeta.objects.get(ensaioa=ensaioa,pazientea=pazientea, preskripzioData=request.POST['preskripzioData'], hurrengoPreskripzioData=request.POST['hurrengoPreskripzioData'])
-                mezua = False
+                eguneraketa = False
             except:
                 #Aurreko datuekin geneukan errezeta hartu eta balioak aldatuko dizkiogu
                 
@@ -1509,7 +1684,7 @@ def errezeta_modifikatu(request, errezeta_ident):
 
                 # Update our variable to tell the template registration was successful.
                 sortuta = True
-                mezua = True
+                eguneraketa = True
 
         # Invalid form or forms - mistakes or something else?
         # Print problems to the terminal.
@@ -1533,7 +1708,7 @@ def errezeta_modifikatu(request, errezeta_ident):
 
     return render(request,
             'farmaciapp/errezeta_info.html',
-            {'admin':admin, 'errezetaren_sortzailea':sortzailea, 'mezua':mezua, 'errezeta_ident':errezeta_ident, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'errezeta_form':errezeta_form, 'ensaioa':ensaioa, 'pazientea_ident':pazientea, 'preskripzioData':preskripzioData, 'hurrengoPreskripzioData':hurrengoPreskripzioData, 'paziente_pisua':pazientePisua})#, 'mota':erabiltzaile_mota, 'farmazia':farmazia} )
+            {'admin':admin, 'errezetaren_sortzailea':sortzailea, 'eguneraketa':eguneraketa, 'errezeta_ident':errezeta_ident, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'errezeta_form':errezeta_form, 'ensaioa':ensaioa, 'pazientea_ident':pazientea, 'preskripzioData':preskripzioData, 'hurrengoPreskripzioData':hurrengoPreskripzioData, 'paziente_pisua':pazientePisua})#, 'mota':erabiltzaile_mota, 'farmazia':farmazia} )
 
 
 
@@ -1815,3 +1990,50 @@ def erabiltzailea_gehitu(request):
     return render(request,
             'farmaciapp/erregistratu.html',
             {'admin':admin, 'mota':erabiltzaile_mota, 'erabiltzaile_form': erabiltzaile_form, 'erabiltzaile_profil_form': erabiltzaile_profil_form, 'erregistratuta': erregistratuta} )
+
+
+@login_required
+def pdf_eskuratu(request, ensaioa_titulua, dispentsazioa_ident):
+    #PDF-a eskuratzeko kodea
+
+    #Dispentsazioaren/Errezeta informazio osoa eskuratzen da
+    paz_dis = PazienteDispentsazio.objects.filter(dispentsazioa__ident=dispentsazioa_ident)
+    paziente_id = paz_dis[0].paziente
+
+    #Dispentsatu diren medikamentuak eskuratuko ditugu
+    medikamentuak = PazienteDispentsazio.objects.filter(dispentsazioa__ident=dispentsazioa_ident, paziente=paziente_id).values('medikamentua')
+    bukaeraData = Dispentsazioa.objects.get(ident=dispentsazioa_ident).bukaeraData
+    pazientea = paziente_id
+    dispentsatzailea = Dispentsazioa.objects.get(ident=dispentsazioa_ident).dispentsatzailea
+     
+    #Errezetaren gainontzeko informazioa lortzen da  
+    errezeta = EnsaioErrezeta.objects.get(ident=dispentsazioa_ident)
+    gainontzekoEremuak = errezeta.gainontzekoEremuak
+
+
+    # Create the HttpResponse object with the appropriate PDF headers.
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="'+dispentsazioa_ident+'.pdf"'
+
+    c = canvas.Canvas(response)
+
+    c.setFont('Helvetica', 12) #Formatua, letra mota eta tamaina
+
+    c.drawString(50,770,'Dispensacion: ' + dispentsazioa_ident)#(alto= 0 y 800) y ancho (entre 0 y 700)
+
+    #Alto se inicia en cero desde abajo hacia arriba.
+
+    #Ancho inicia desde cero de izquierda a derecha
+
+    c.line(50,760,580,760) # Para hacer una linea horizontal
+
+    c.drawString(50,730, 'Paciente: ' + str(paziente_id.ident))# Para escribir cualquier tipo de texto
+    c.drawString(50,700, 'Fecha de Dispensacion: ' + str(bukaeraData))# Para escribir cualquier tipo de texto
+    c.drawString(50,670, 'Encargado de la dispensacion: ' + dispentsatzailea)# Para escribir cualquier tipo de texto
+    c.drawString(50,640, gainontzekoEremuak)# Para escribir cualquier tipo de texto
+    
+    c.showPage()
+    c.save() # Para guardar el PDF
+
+    
+    return response
