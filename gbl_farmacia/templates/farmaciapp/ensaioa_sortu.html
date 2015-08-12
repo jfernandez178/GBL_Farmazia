@@ -19,6 +19,40 @@
   </script>
   
         <title>Ensaio Berria</title>
+
+        {% load staticfiles %}
+        <script src="{% static "js/jquery-1.11.1.js" %}"></script>
+        <script src="{% static "js/alertify.min.js" %}"></script>
+        <!-- include the core styles -->
+        <link rel="stylesheet" href="{% static "js/alertify.core.css" %}" />
+        <!-- include a theme, can be included into the core instead of 2 separate files -->
+        <link rel="stylesheet" href="{% static "js/alertify.default.css" %}" />
+        <script>
+
+           
+            function konfirmazioa(form_id){
+                   alertify.confirm("Ziur al zaude erabakiarekin?", function (e) {
+
+                if (e) {
+                    
+                    document.getElementById(form_id).submit();
+                    
+                } else {
+
+                    //return false;
+                    // user clicked "cancel"
+
+                }
+                });
+                   
+                   
+            }
+
+
+        </script>
+
+
+        
     </head>
 
     <body>
@@ -50,7 +84,7 @@
         <h3>Erabiltzailea: {{ user.username }}</h3>
         <h4>Zerbitzua: {{mota}}</h4><br/>
                 <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu  <span class="glyphicon glyphicon-book" aria-hidden="true"></span></a><br/>
-                <a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu  <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span></a><br/>
+                <a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu  <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span><span class="badge">{{pendienteak}}</span></a><br/>
                 {% if mota == farmazia %}
                     <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu  <span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a><br/>
                 {% endif %}
@@ -85,7 +119,7 @@
 
             {{ ensaio_form.as_p }}
 
-            <input class="btn btn-primary" type="submit" name="sortu_ensaio_berria" value="Sortu Ensaioa"/>
+            <input class="btn btn-primary" type=button onclick="konfirmazioa('ensaioa_sortu2')" name="sortu_ensaio_berria" value="Sortu Ensaioa"/>
            
         </form>
         <br/>

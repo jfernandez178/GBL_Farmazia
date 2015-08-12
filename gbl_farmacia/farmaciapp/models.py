@@ -13,160 +13,164 @@ import time
 
 #Medikamentuari dagokion entitatea eta bere erlazioak
 class Medikamentua(models.Model):
-    #ident izango da kode bat medikamentua konkreatua denean, eta izena generikoa denean
+    #ident izango da medikamentuaren gako nagusia
     ident = models.CharField(primary_key=True, max_length=128)
     kit = models.IntegerField(blank=True)
     lote = models.IntegerField(blank=True)
     kaduzitatea = models.DateField(blank=True)
     bidalketaZenbakia = models.IntegerField(blank=True)
     bidalketaData = models.DateField(blank=True)
+
+    #medikamentu horren zenbat unitate dauden Stock-ean adierazteko
     unitateak = models.IntegerField(default=1)
     bidalketaOrdua = models.TimeField(blank=True, null=True)
 
-    #aldagai hau izango da primary key-a
-    #horrela, ident-ek, nahiz existitzen diren medikamentuen gainean sobreeskribitzeko balioko du
-    #superident = models.AutoField(primary_key=True)
-
-    
-
-
+    #Medikamentuaren instantzia eskuratzen denean identzifikatzailearen bidez izendatuko da
     def __unicode__(self):
         return self.ident
 
 #Pazienteari dagokion entitatea eta bere erlazioak
 class Pazientea(models.Model):
+    #ident izango da Pazientearen gako nagusia
     ident = models.AutoField(primary_key=True)
+
+    #ensaioaren barruan zein id duen adierazteko
     idensaioan = models.CharField(max_length=128, blank=True)
-    izena = models.CharField(max_length=128)    
+    izena = models.CharField(max_length=128)
+
+    #zein unitate klinikori dagokion paziente hau adierazteko   
     unitateKlinikoa = models.CharField(max_length=128, blank=True)
+
+    #pazienteari dagozkion beharrezko datuak:
     pisua = models.FloatField()
     #datu gehiago behar badira hemen jartzen dira
-    #TODO
+    
 
-
+    #IDENSAIOAN EDO IDENT???
     def __unicode__(self):
         return unicode(self.ident)
 
 
 #Ensaioari dagokion entitatea eta bere erlazioak
 class Ensaioa(models.Model):
-    #autoinkrement bezala jarriko diogu gakoa, nahiz eta titulua ere bakarra den
-    #ident = models.AutoField(primary_key=True)
-	
+    
+    #Egoerak ensaioa itxita edo irekita dagoen adieraziko du
+    egoera = models.CharField(max_length=128)
 
-    #egoera mota nominalekoa izango da: (irekita, itxita)
-    egoera = models.CharField(max_length=128)#, default=1, choices=((1, 'Irekita'), (2, 'Itxita')))#, default="espezifikatu gabe")
-    #egoera = ((irekita, 'irekita'), (itxita, 'itxita'))
-    hasieraData = models.DateField()#default=datetime.date(1000, 01, 01))
-    bukaeraData = models.DateField(blank=True, null=True)#default=datetime.date(1000, 01, 01), blank=True)
-    #protokoloZenbakia mota nominalekoa izango da: (I, II, III, IV, V)
-    protokoloZenbakia = models.IntegerField(blank=True)#, default=1, choices=((1, 'I'), (2, 'II'), (3, 'III'), (4, 'IV'), (5, 'V')))#default=0)
-    #protokoloZenbakia = ((I, 'I'), (II, 'II'), (III, 'III'), (IV, 'IV'), (V, 'V'))
+    hasieraData = models.DateField()
 
-    titulua = models.CharField(primary_key=True, max_length=128,unique=True)#, default="espezifikatu gabe")
-    #zerbitzua mota nominalekoa izan daiteke...
-    zerbitzua = models.CharField(max_length=128)#, default=1, choices=((1, 'zerbitzua1'), (2, 'zerbitzua2')))#, default="espezifikatu gabe")
-    promotorea = models.CharField(max_length=128)#, default="espezifikatu gabe")
-    #estudioMota klase nominalekoa da? (ciego, doble ciego, etab.)
-    estudioMota = models.CharField(max_length=128)#, default=1, choices=((1, 'mota 1'), (2, 'mota 2')))#, default="espezifikatu gabe")
-    monitorea = models.CharField(max_length=128)#, default="espezifikatu gabe")
-    ikertzailea = models.CharField(max_length=128)#, default="espezifikatu gabe")
-    komentarioak = models.CharField(max_length=128, blank=True)#, default="espezifikatu gabe", blank=True)
-    #pazientea = models.ForeignKey(Pazientea)
+    #bukaera datak null balioa izatea onartu behar da, ensaioa sortzerakoan ez baitu bukaera datarik izago esleituta
+    bukaeraData = models.DateField(blank=True, null=True)
 
+    protokoloZenbakia = models.IntegerField(blank=True)
+
+    #titulua bakarra izango denez ensaio bakoitzarentzat, gako nagusia izango da
+    titulua = models.CharField(primary_key=True, max_length=128,unique=True)
+    
+    zerbitzua = models.CharField(max_length=128)
+    promotorea = models.CharField(max_length=128)
+    estudioMota = models.CharField(max_length=128)
+    monitorea = models.CharField(max_length=128)
+    ikertzailea = models.CharField(max_length=128)
+
+    #Komentarioak atributuaren balioa hutsik uztea baimendu beharra dago, ez delako betetzeko den derrigorrezko eremu bat izango
+    komentarioak = models.CharField(max_length=128, blank=True)
 
 
 
+    #Ensaioaren instantzia eskuratzen denean tituluaren bidez izendatuko da
     def __unicode__(self):
         return self.titulua
 
 
-#Errezetari dagokion entitatea eta bere erlazioak
-#ERREZETAK GAKO BAT IZAN BEHARKO LUKE DESBERDINTZEKO
-#class Errezeta(models.Model):
-#    preskripzioData = models.DateField()
-#    hurrengoPreskripzioData = models.DateField()
-#    ident = models.CharField(max_length=128)
-#
-#   def __unicode__(self):
-#        return self.ident
-
 
 #Dispentsazioari dagokion entitatea eta bere erlazioak
-#DISPENTSAZIOAK GAKO BAT IZAN BEHARKO LUKE DESBERDINTZEKO
 class Dispentsazioa(models.Model):
-	#TODO...
+	
     bukaeraData = models.DateField()
     
+    #Dispentsazioaren gako nagusia identzifikatzailea izango da
     ident = models.AutoField(primary_key=True)
-    #zein ensaiori dagon asoziatuta gorde behar da
+
+    #Zein ensaiori dagon lotuta gorde behar da
     ensaioa = models.ForeignKey(Ensaioa)
 
-    #Aldagai honek gordeko du nork dispentsatu duen
+    #dagokion EnsaioErrezeta objektuaren identifikatzailea
+    ensaioerrezeta = models.IntegerField(default=0)
+
+    #Aldagai honek gordeko du nork egin duen dispentsazioa
     dispentsatzailea = models.CharField(max_length=128)
 
+    #Dispentsazioaren instantzia eskuratzen denean identifikatzailearen bidez izendatuko da
     def __unicode__(self):
         return unicode(self.ident)
 
    
 
-
-#MANY TO MANY ERLAZIOAK NOLA ESLEITZEN DIRA? EZ DAUZKAT ONDO BEHEKO KLASEAK DEFINITUTA?
-
 #Erlazioak adierazteko behar diren klaseak definitzen dira ondoren
 
 
-
-
-
+#Ensaioak eta Medikamentuak lotzen dituen entitatea da
 class MedikamentuEnsaio(models.Model):
 	medikamentua = models.ForeignKey(Medikamentua, null=True, related_name="medikamentua_ensaioan")
 	ensaioa = models.ForeignKey(Ensaioa, null=True)
 
+    #MedikamentuEnsaio instantzia eskuratzen denean medikamentuaren bidez izendatuko da
 	def __unicode__(self):
 		return unicode(self.medikamentua)# + "; " + self.ensaioa)
 
+#Pazienteak eta Dispentsazioak lotzen dituen entitatea da
 class PazienteDispentsazio(models.Model):
+    #identifikatzaile autoinkremental hau izango da gako nagusia
     identBi = models.AutoField(primary_key=True)
+    #identifikatzaile hau Dispentsazioaren identifikatzailearen berdina izango da
     ident = models.IntegerField(default=1)
     medikamentua = models.ForeignKey(Medikamentua, null=True)
     dispentsazioa = models.ForeignKey(Dispentsazioa, null=True)
     paziente = models.ForeignKey(Pazientea, null=True)
     dosia = models.IntegerField(null=True, blank=True) 
+
+    #PazienteDispentsazioren instantzia eskuratzen denean identifikatzailearen bidez izendatuko da; hau da, dispentsazioaren identifikatzailearen bitartez
     def __unicode__(self):
-        return unicode(self.ident)# + "; " + self.medikamentua + "; " + self.dispentsazioa)
+        return unicode(self.ident)
 
-
+#Ensaioak eta Errezetak lotzen dituen entitatea da
 class EnsaioErrezeta(models.Model):
+    #identifikatzaile autoinkremental bat izango da gako nagusia
     ident = models.AutoField(primary_key=True)
     ensaioa = models.ForeignKey(Ensaioa, null=True)
     pazientea = models.ForeignKey(Pazientea, null=True)
     preskripzioData = models.DateField(null=True)
     hurrengoPreskripzioData = models.DateField(null=True, blank=True)
 
-    #Aldagai honek kontrolatuko du zein erabiltzailek sortu duen errezeta, berak bakarrik modifikatu ahalko duelako
+    #Aldagai honek kontrolatuko du zein erabiltzailek sortu duen errezeta
     sortzailea = models.CharField(max_length=128, blank=True, null=True)
 
-    #Aldagai honek esango du ea errezeta 'pendiente' egoeran dagoen edo ez
+    #Aldagai honek esango du ea errezeta 'Pendiente' egoeran dagoen edo ez; hau da, onartuta dagoen edo ez
     pendiente = models.CharField(max_length=128, default='Pendiente')
 
-    #Eremu zabal bat izango da nahi diren eremuak adierazteko
+    #Eremu zabal eta ireki bat izango da nahi diren eremuak adierazteko
     gainontzekoEremuak = models.TextField(null=True, blank=True)
-	
-    def __unicode__(self):
-		return unicode(self.ident)# + "; " + self.preskripzioData + "; " + self.pazientea)
 
+
+    #EnsaioErrezetaren instantzia eskuratzen denean identifikatzailearen bidez izendatuko da
+    def __unicode__(self):
+		return unicode(self.ident)
+
+
+#Pazienteak eta Ensaioak lotzen dituen entitatea da
 class PazienteEnsaio(models.Model):
     ensaioa = models.ForeignKey(Ensaioa, null=True, related_name="pazientea_ensaioan")
     pazientea = models.ForeignKey(Pazientea, null=True)
 
+    #PazienteEnsaioaren instantzia eskuratzen denean dagokion ensaioaren bidez izendatuko da
     def __unicode__(self):
         return unicode(self.ensaioa)
 
 
-#Hau bakarrik izango litzateke erabiltzaileak bere profila izan nahiko balu.
+#Erabiltzailearen profilaren informazioa gordeko duen entitatea da
 class ErabiltzaileProfila(models.Model):
-    # This line is required. Links UserProfile to a User model instance.
+    # Lerro hau beharrezkoa da. ErabiltzaileProfila linkatzen du User modeloaren instantziarekin.
     erabiltzailea = models.OneToOneField(User)
 
     # Gehitu nahi diren atributuak
@@ -175,29 +179,10 @@ class ErabiltzaileProfila(models.Model):
     izena = models.CharField(max_length=128)
     abizena1 = models.CharField(max_length=128)
     abizena2 = models.CharField(max_length=128)
-    zerbitzua = models.CharField(max_length=128)#, default=1, choices=((1, 'Farmazia'), (2, 'Medicina')))
+    zerbitzua = models.CharField(max_length=128, default=1, choices=(('Farmazia', 'Farmazia'), ('Medicina', 'Medicina')))
     #...???
 
-    # Override the __unicode__() method to return out something meaningful!
+    # modelo honen instantzia bat atzitzen denean zein izenekin definituko den instantzia hori adierazten du
     def __unicode__(self):
         return self.erabiltzailea.username
 
-
-
-#class EnsaioBerria(models.Model):
-#    protokoloZenbakia = forms.IntegerField()
-#    titulua = forms.CharField(max_length=128)
-#    #egoera spinner bat izan behar da
-#    egoera = forms.CharField(max_length=128)
-#    data = forms.DateField()
-#    zerbitzua = forms.CharField(max_length=128)
-#    promotorea = forms.CharField(max_length=128)
-#    #ikerkuntzaMota spinner bat izan behar da
-#    ikerkuntza_mota = forms.CharField(max_length=128)
-#    monitorea = forms.CharField(max_length=128)
-#    ikertzailea = forms.CharField(max_length=128)
-#    komentarioak = forms.CharField(max_length=3000)
-#
-#    # Override the __unicode__() method to return out something meaningful!
-#    def __unicode__(self):
-#        return self.titulua

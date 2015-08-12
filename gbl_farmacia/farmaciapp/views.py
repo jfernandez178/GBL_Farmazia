@@ -43,6 +43,8 @@ def erregistratu(request):
         erabiltzaile_form = ErabiltzaileFormularioa(data=request.POST)
         erabiltzaile_profil_form = ErabiltzaileProfilFormularioa(data=request.POST)
 
+
+
         # If the two forms are valid...
         if erabiltzaile_form.is_valid() and erabiltzaile_profil_form.is_valid():
             # Save the user's form data to the database.
@@ -58,6 +60,14 @@ def erregistratu(request):
             # This delays saving the model until we're ready to avoid integrity problems.
             profila = erabiltzaile_profil_form.save(commit=False)
             profila.erabiltzailea = erabiltzailea
+
+            #Konprobatzen da ea erabiltzailea autentikatuta dagoen
+            #Baiezko kasuan, administratzaileak beste erabiltzaile bat sortu nahi duela adierazten da
+            if request.user.is_authenticated():
+                if 'admin' in request.POST:
+                    #checkbox-a markatu badu
+                    #Administratzaile rola eman behar zaio
+                    profila.zerbitzua = 'admin'
 
             # Did the user provide a profile picture?
             # If so, we need to get it from the input form and put it in the UserProfile model.
@@ -83,9 +93,13 @@ def erregistratu(request):
         erabiltzaile_profil_form = ErabiltzaileProfilFormularioa()
 
     # Render the template depending on the context.
+
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
     return render(request,
             'farmaciapp/erregistratu.html',
-            {'erabiltzaile_form': erabiltzaile_form, 'erabiltzaile_profil_form': erabiltzaile_profil_form, 'erregistratuta': erregistratuta} )
+            {'pendienteak':errezeta_pendienteak.count, 'erabiltzaile_form': erabiltzaile_form, 'erabiltzaile_profil_form': erabiltzaile_profil_form, 'erregistratuta': erregistratuta} )
 
 
 #Erabiltzaileak login egiteko beharreko bista
@@ -147,6 +161,8 @@ def aukera_menua(request):
         #Farmazia zerbitzukoa bada, orrialde mota bat erakutsiko da
         #Ez bada Farmazia zerbitzukoa, beste bat
 
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
 
     #Jakiteko zein motako erabiltzailea den
     erabiltzaile_mota = ErabiltzaileProfila.objects.filter(Q(erabiltzailea=request.user))[0].zerbitzua
@@ -156,7 +172,7 @@ def aukera_menua(request):
 
 
     #Aukera menura eramango gaitu
-    return render(request, 'farmaciapp/aukera_menua.html', {'farmazia':farmazia, 'mota':erabiltzaile_mota, 'admin':admin})
+    return render(request, 'farmaciapp/aukera_menua.html', {'pendienteak':errezeta_pendienteak.count, 'farmazia':farmazia, 'mota':erabiltzaile_mota, 'admin':admin})
 
 
 @login_required
@@ -171,8 +187,12 @@ def ensaioak_kontsultatu_botoia(request):
     farmazia = 'Farmazia'
     admin = 'admin'
 
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+
     # Honek eramango gaitu ensaioen kontsulta kudeatuko duen orrialdera
-    return render(request, 'farmaciapp/ensaio_menua.html', {'admin':admin, 'farmazia':farmazia, 'mota':erabiltzaile_mota})
+    return render(request, 'farmaciapp/ensaio_menua.html', {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'farmazia':farmazia, 'mota':erabiltzaile_mota})
 
 
 
@@ -237,10 +257,14 @@ def ensaioak_bilatu(request):
     farmazia = 'Farmazia'
     admin = 'admin'
 
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+
     # Render the template depending on the context.
     return render(request,
             'farmaciapp/ensaioak_bilatu.html',
-            {'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'ondo':ondo, 'pazientea_id': pazientea_id, 'pazientea': pazientea, 'bilaketa_emaitzak': bilaketa_emaitzak, 'ensaio_bilaketa_form': ensaio_bilaketa_form, 'ensaio_bilaketa_form2': ensaio_bilaketa_form2, 'pazientea_duten_ensaioak': pazientea_duten_ensaioak} )
+            {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'ondo':ondo, 'pazientea_id': pazientea_id, 'pazientea': pazientea, 'bilaketa_emaitzak': bilaketa_emaitzak, 'ensaio_bilaketa_form': ensaio_bilaketa_form, 'ensaio_bilaketa_form2': ensaio_bilaketa_form2, 'pazientea_duten_ensaioak': pazientea_duten_ensaioak} )
     #TODO
 
 
@@ -311,9 +335,13 @@ def ensaioa_sortu(request):
     farmazia = 'Farmazia'
     admin = 'admin'
 
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+
     return render(request,
             'farmaciapp/ensaioa_sortu.html',
-            {'admin':admin, 'ensaio_form': ensaio_form, 'sortuta': sortuta, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'ensaioa_titulua':ensaioa_titulua} )
+            {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'ensaio_form': ensaio_form, 'sortuta': sortuta, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'ensaioa_titulua':ensaioa_titulua} )
 
 
 
@@ -364,6 +392,9 @@ def ensaioa_info(request, ensaioa_titulua):
     except Ensaioa.DoesNotExist:
         pass
 
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+    context_dict['pendienteak'] = errezeta_pendienteak.count
    
     return render(request, 'farmaciapp/ensaioa_info_especial.html', context_dict)
 
@@ -482,11 +513,15 @@ def dispentsazioak_aztertu(request, ensaioa_titulua):
     farmazia = 'Farmazia'
     admin = 'admin'
 
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+
     # Render the template depending on the context.
     #Honek eramango gaitu medikamentuen bilaketa emaitza erakutsiko duen orrialdera
     return render(request,
             'farmaciapp/dispentsazioak_aztertu.html',
-            {'admin':admin, 'farmazia':farmazia, 'mota':erabiltzaile_mota, 'pazienteidreal':pazienteidreal, 'noiztik': noiztik, 'noizarte': noizarte, 'flag': flag, 'paziente_id': paziente_id, 'pazientea': pazienteaEnsaioan, 'ensaioa': ensaioa_titulua, 'bilaketa_emaitzak': bilaketa_emaitzak, 'dispentsazio_form': dispentsazio_form, 'ensaioa_titulua':ensaioa_titulua} )
+            {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'farmazia':farmazia, 'mota':erabiltzaile_mota, 'pazienteidreal':pazienteidreal, 'noiztik': noiztik, 'noizarte': noizarte, 'flag': flag, 'paziente_id': paziente_id, 'pazientea': pazienteaEnsaioan, 'ensaioa': ensaioa_titulua, 'bilaketa_emaitzak': bilaketa_emaitzak, 'dispentsazio_form': dispentsazio_form, 'ensaioa_titulua':ensaioa_titulua} )
     #TODO
 
 
@@ -526,13 +561,16 @@ def dispentsazioa_info(request, ensaioa_titulua, dispentsazioa_ident):
         context_dict['pazientea'] = paziente_id
         context_dict['dispentsatzailea'] = Dispentsazioa.objects.get(ident=dispentsazioa_ident).dispentsatzailea
        
-        errezeta = EnsaioErrezeta.objects.get(ident=dispentsazioa_ident)
+        errezeta = EnsaioErrezeta.objects.get(ident=Dispentsazioa.objects.get(ident=dispentsazioa_ident).ensaioerrezeta)
         context_dict['gainontzekoEremuak'] = errezeta.gainontzekoEremuak
         
 
     except PazienteDispentsazio.DoesNotExist:
         pass
 
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+    context_dict['pendienteak'] = errezeta_pendienteak.count
    
     return render(request, 'farmaciapp/dispentsazioa_info.html', context_dict)
 
@@ -603,9 +641,13 @@ def errezeta_sortu_ensaiotik(request, ensaioa_titulua):
     farmazia = 'Farmazia'
     admin = 'admin'
 
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+
     return render(request,
             'farmaciapp/errezeta_ensaiotik.html',
-            {'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'sortuta': sortuta, 'mezua':mezua, 'errezeta_form': errezeta_form, 'sortuta': sortuta, 'titulua':ensaioa_titulua})#, 'mota':erabiltzaile_mota, 'farmazia':farmazia} )
+            {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'sortuta': sortuta, 'mezua':mezua, 'errezeta_form': errezeta_form, 'sortuta': sortuta, 'titulua':ensaioa_titulua})#, 'mota':erabiltzaile_mota, 'farmazia':farmazia} )
 
 
 
@@ -625,8 +667,12 @@ def errezeta_sortu_ensaiotik_botoia(request, ensaioa_titulua):
     farmazia = 'Farmazia'
     admin = 'admin'
 
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
 
-    return render(request, 'farmaciapp/errezeta_ensaiotik.html', {'mota':erabiltzaile_mota, 'farmazia':farmazia, 'admin':admin, 'eratorpena':eratorpena, 'errezeta_form':errezeta_form, 'titulua':ensaioa_titulua})
+
+
+    return render(request, 'farmaciapp/errezeta_ensaiotik.html', {'pendienteak':errezeta_pendienteak.count, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'admin':admin, 'eratorpena':eratorpena, 'errezeta_form':errezeta_form, 'titulua':ensaioa_titulua})
 
 
 @login_required
@@ -645,6 +691,10 @@ def medikamentua_ezabatu(request, medikamentua_ident):
     context_dict['farmazia'] = farmazia
     context_dict['admin'] = 'admin'
     context_dict['ezabatuta'] = True
+
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+    context_dict['pendienteak'] = errezeta_pendienteak.count
 
 
     return render(request, 'farmaciapp/medikamentua_info.html', context_dict)
@@ -672,10 +722,12 @@ def medikamentua_kendu_ensaiotik(request, ensaioa_titulua, medikamentua_ident):
     mezua = 'Medikamentua ondo ezabatu da'
     medikamentua_form = MedikamentuBerriFormularioa()
 
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
 
 
     #Ensaioari medikamentuak gehitzeaz arduratuko den orrialdera eramango gaitu
-    return render(request, 'farmaciapp/medikamentuak_gehitu_ensaioari.html', {'mezua':mezua, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'medikamentua_form':medikamentua_form, 'medikamentuen_lista': medikamentuen_lista, 'titulua':ensaioa_titulua})
+    return render(request, 'farmaciapp/medikamentuak_gehitu_ensaioari.html', {'pendienteak':errezeta_pendienteak.count, 'mezua':mezua, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'medikamentua_form':medikamentua_form, 'medikamentuen_lista': medikamentuen_lista, 'titulua':ensaioa_titulua})
 
 
 
@@ -783,10 +835,10 @@ def medikamentuak_gehitu_ensaioari_botoia(request, ensaioa_titulua):
                 #Orain konprobatzen da ea erabiltzaileak ordua espezifikatu duen edo ez
                 if request.POST['ordua'] != '' and request.POST['minutuak'] != '':
                     #Ordua espezifikatu badu
-                    ordua = int(request.POST['ordua'])
-                    minutuak = int(request.POST['minutuak'])
-                    ordu_berria_string = ordua + '-' + minutuak
-                    bidalketa_ordu_berria = parser.parse(ordu_berria_string).date
+                    ordua = request.POST['ordua']
+                    minutuak = request.POST['minutuak']
+                    ordu_berria_string = ordua + ':' + minutuak
+                    bidalketa_ordu_berria = parser.parse(ordu_berria_string).date()
                     bidalketa_ordu_berria = bidalketa_ordu_berria.strftime('%H:%M')
                     medikamentua_konprobatu.bidalketaOrdua = bidalketa_ordu_berria
                             
@@ -811,9 +863,11 @@ def medikamentuak_gehitu_ensaioari_botoia(request, ensaioa_titulua):
     farmazia = 'Farmazia'
     admin = 'admin'
 
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
 
     #Ensaioari medikamentuak gehitzeaz arduratuko den orrialdera eramango gaitu
-    return render(request, 'farmaciapp/medikamentuak_gehitu_ensaioari.html', {'mezua':mezua, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'medikamentua_form':medikamentua_form, 'medikamentuen_lista': medikamentuen_lista, 'titulua':ensaioa_titulua})
+    return render(request, 'farmaciapp/medikamentuak_gehitu_ensaioari.html', {'pendienteak':errezeta_pendienteak.count, 'mezua':mezua, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'medikamentua_form':medikamentua_form, 'medikamentuen_lista': medikamentuen_lista, 'titulua':ensaioa_titulua})
 
 
 
@@ -841,7 +895,11 @@ def ensaioen_historikoa_ikusi_botoia(request):
     ensaio_bilaketa_form = EnsaioBilaketaFormularioa()
     ensaio_bilaketa_form2 = EnsaioBilaketaFormularioa2()
 
-    return render(request, 'farmaciapp/ensaioen_historikoa.html', {'admin':admin, 'ensaio_bilaketa_form2':ensaio_bilaketa_form2, 'ensaio_bilaketa_form':ensaio_bilaketa_form, 'mota':erabiltzaile_mota, 'farmazia':farmazia})
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+
+    return render(request, 'farmaciapp/ensaioen_historikoa.html', {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'ensaio_bilaketa_form2':ensaio_bilaketa_form2, 'ensaio_bilaketa_form':ensaio_bilaketa_form, 'mota':erabiltzaile_mota, 'farmazia':farmazia})
 
 
 @login_required
@@ -891,10 +949,15 @@ def ensaioen_historikoa_ikusi(request):
     farmazia = 'Farmazia'
     admin = 'admin'
 
+
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+
     # Render the template depending on the context.
     return render(request,
             'farmaciapp/ensaioen_historikoa.html',
-            {'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'bilaketa_emaitzak': bilaketa_emaitzak, 'ensaio_bilaketa_form': ensaio_bilaketa_form, 'ensaio_bilaketa_form2': ensaio_bilaketa_form2} )
+            {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'bilaketa_emaitzak': bilaketa_emaitzak, 'ensaio_bilaketa_form': ensaio_bilaketa_form, 'ensaio_bilaketa_form2': ensaio_bilaketa_form2} )
 
 
 
@@ -919,7 +982,11 @@ def ensaioa_itxi(request, ensaioa_titulua):
     ensaio_bilaketa_form = EnsaioBilaketaFormularioa()
     ensaio_bilaketa_form2 = EnsaioBilaketaFormularioa2()
 
-    return render(request, 'farmaciapp/ensaioak_bilatu.html', {'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'ensaio_bilaketa_form':ensaio_bilaketa_form, 'ensaio_bilaketa_form2':ensaio_bilaketa_form2})
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+
+    return render(request, 'farmaciapp/ensaioak_bilatu.html', {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'ensaio_bilaketa_form':ensaio_bilaketa_form, 'ensaio_bilaketa_form2':ensaio_bilaketa_form2})
 
 
 
@@ -973,6 +1040,9 @@ def itxitako_ensaioa_info(request, ensaioa_titulua):
     except Ensaioa.DoesNotExist:
         pass
 
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+    context_dict['pendienteak'] = errezeta_pendienteak.count
    
     return render(request, 'farmaciapp/itxitako_ensaioa_info.html', context_dict)
 
@@ -1089,11 +1159,15 @@ def itxitako_ensaioen_dispentsazioak(request, ensaioa_titulua):
     farmazia = 'Farmazia'
     admin = 'admin'
 
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+
 
     # Render the template depending on the context.
     return render(request,
             'farmaciapp/itxitako_dispentsazioak_aztertu.html',
-            {'admin':admin, 'farmazia':farmazia, 'mota':erabiltzaile_mota, 'pazienteidreal':pazienteidreal, 'noiztik': noiztik, 'noizarte': noizarte, 'flag': flag, 'paziente_id': paziente_id, 'pazientea': pazienteaEnsaioan, 'ensaioa': ensaioa_titulua, 'bilaketa_emaitzak': bilaketa_emaitzak, 'dispentsazio_form': dispentsazio_form, 'ensaioa_titulua':ensaioa_titulua} )
+            {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'farmazia':farmazia, 'mota':erabiltzaile_mota, 'pazienteidreal':pazienteidreal, 'noiztik': noiztik, 'noizarte': noizarte, 'flag': flag, 'paziente_id': paziente_id, 'pazientea': pazienteaEnsaioan, 'ensaioa': ensaioa_titulua, 'bilaketa_emaitzak': bilaketa_emaitzak, 'dispentsazio_form': dispentsazio_form, 'ensaioa_titulua':ensaioa_titulua} )
     #TODO
 
 
@@ -1114,6 +1188,11 @@ def itxitako_dispentsazioaren_info(request, ensaioa_titulua, dispentsazioa_ident
 
     #Dispentsazio horren errezetaren informazioa lortu beharko litzateke
     context_dict['gainontzekoEremuak'] = None
+
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+    context_dict['pendienteak'] = errezeta_pendienteak.count
 
 
     
@@ -1157,7 +1236,11 @@ def medikamentuak_kontsultatu_botoia(request):
     farmazia = 'Farmazia'
     admin = 'admin'
 
-    return render(request, 'farmaciapp/medikamentu_menua.html', {'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia})
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+
+    return render(request, 'farmaciapp/medikamentu_menua.html', {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia})
 
 @login_required
 def medikamentuak_bilatu(request):
@@ -1222,11 +1305,15 @@ def medikamentuak_bilatu(request):
     farmazia = 'Farmazia'
     admin = 'admin'
 
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+
 
     #Honek eramango gaitu medikamentuen bilaketa emaitza erakutsiko duen orrialdera
     return render(request,
             'farmaciapp/medikamentuak_bilatu.html',
-            {'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'ondo':ondo, 'ensaioa_id': ensaioa_id, 'ensaioa': ensaioa, 'bilaketa_emaitzak': bilaketa_emaitzak, 'medikamentu_bilaketa_form': medikamentu_bilaketa_form, 'medikamentu_bilaketa_form2': medikamentu_bilaketa_form2} )
+            {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'ondo':ondo, 'ensaioa_id': ensaioa_id, 'ensaioa': ensaioa, 'bilaketa_emaitzak': bilaketa_emaitzak, 'medikamentu_bilaketa_form': medikamentu_bilaketa_form, 'medikamentu_bilaketa_form2': medikamentu_bilaketa_form2} )
     #TODO
 
 
@@ -1271,6 +1358,10 @@ def medikamentua_info(request, medikamentua_ident):
     except Medikamentua.DoesNotExist:
         pass
 
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+    context_dict['pendienteak'] = errezeta_pendienteak.count
 
    
     return render(request, 'farmaciapp/medikamentua_info.html', context_dict)
@@ -1296,7 +1387,7 @@ def errezeta_pendienteak_kontsultatu(request):
     #Pendiente dauden Errezetak aterako dira
     errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
 
-    return render(request, 'farmaciapp/errezeta_pendienteak.html', {'admin':admin, 'errezeta_pendienteak': errezeta_pendienteak, 'farmazia':farmazia, 'mota': erabiltzaile_mota})
+    return render(request, 'farmaciapp/errezeta_pendienteak.html', {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'errezeta_pendienteak': errezeta_pendienteak, 'farmazia':farmazia, 'mota': erabiltzaile_mota})
 
 
 #USTE DUT HAU EZ DELA ERABILTZEN
@@ -1306,7 +1397,11 @@ def errezeta_sortu_botoia(request):
     sortuta = False
     errezeta_form = ErrezetaBerriFormularioa()
 
-    return render(request, 'farmaciapp/errezeta.html', {'sortuta': sortuta, 'errezeta_form':errezeta_form})
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+
+    return render(request, 'farmaciapp/errezeta.html', {'pendienteak':errezeta_pendienteak.count, 'sortuta': sortuta, 'errezeta_form':errezeta_form})
 
 
 @login_required
@@ -1399,9 +1494,13 @@ def errezeta_sortu(request):
     farmazia = 'Farmazia'
     admin = 'admin'
 
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+
     return render(request,
             'farmaciapp/errezeta_ensaiotik.html',
-            {'admin':admin, 'farmazia':farmazia, 'mota':erabiltzaile_mota, 'eratorpena':'errezeta', 'eratorpen_emaitza':eratorpen_emaitza, 'mezua': mezua, 'errezeta_form': errezeta_form, 'sortuta': sortuta, 'titulua':ensaioa})#, 'mota':erabiltzaile_mota, 'farmazia':farmazia} )
+            {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'farmazia':farmazia, 'mota':erabiltzaile_mota, 'eratorpena':'errezeta', 'eratorpen_emaitza':eratorpen_emaitza, 'mezua': mezua, 'errezeta_form': errezeta_form, 'sortuta': sortuta, 'titulua':ensaioa})#, 'mota':erabiltzaile_mota, 'farmazia':farmazia} )
 
 
 @login_required
@@ -1420,6 +1519,11 @@ def errezeta_info(request, errezeta_ident):
     context_dict['paziente_pisua'] = None
     context_dict['gainontzekoEremuak'] = None
     context_dict['ensaioaren_medikamentuak'] = None
+
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+    context_dict['pendienteak'] = errezeta_pendienteak.count
 
     #Dosiaren kalkulua: TODO
     #Jarri beharko litzateke medikamentuentzako eremu bat, farmazeutikoak bete ahal izateko
@@ -1498,57 +1602,61 @@ def errezeta_onartu(request, errezeta_ident):
 
     if request.method == 'POST':
 
-
-        #Errezetaren egoera 'Pendiente'-tik 'Dispentsatuta'-ra pasatu behar da
-        ensaio_errezeta = EnsaioErrezeta.objects.get(ident=errezeta_ident)
-        ensaio_errezeta.pendiente = 'Dispentsatuta'
-        ensaio_errezeta.gainontzekoEremuak = request.POST['gainontzekoEremuak']
-        ensaio_errezeta.save()
-
-        ensaioa = Ensaioa.objects.get(titulua=request.POST['ensaioa'])
-    
-        bukaeraData = parser.parse(request.POST['preskripzioData']).date()#datetime.datetime.strptime(request.POST['preskripzioData'], '%b %d, %Y')
-        bukaeraData = bukaeraData.strftime('%Y-%m-%d')
-
-        dispentsazioa = Dispentsazioa(bukaeraData=bukaeraData, ensaioa=ensaioa, dispentsatzailea=request.user)
-        dispentsazioa.save()
-
-
-        #Pazientea ensaioarekin lotuta dagoela ere jarri behar da
-        pazientea = Pazientea.objects.get(ident=request.POST['pazientea'])
-
-        try:
-            paziente_ensaio = PazienteEnsaio.objects.get(pazientea=pazientea, ensaioa=ensaioa)
-
-        #Ez baldin badago erregistratuta jada, erregistratu egin behar da
-        except PazienteEnsaio.DoesNotExist:
-            paziente_ensaio = PazienteEnsaio(pazientea=pazientea, ensaioa=ensaioa)
-            paziente_ensaio.save()
-
-        
         dispentsatu_beharreko_medikamentu_lista = request.POST.getlist('medikamentua')
-        mezua = dispentsatu_beharreko_medikamentu_lista
+        if dispentsatu_beharreko_medikamentu_lista:
+
+
+            #Errezetaren egoera 'Pendiente'-tik 'Dispentsatuta'-ra pasatu behar da
+            ensaio_errezeta = EnsaioErrezeta.objects.get(ident=errezeta_ident)
+            ensaio_errezeta.pendiente = 'Dispentsatuta'
+            ensaio_errezeta.gainontzekoEremuak = request.POST['gainontzekoEremuak']
+            ensaio_errezeta.save()
+
+            ensaioa = Ensaioa.objects.get(titulua=request.POST['ensaioa'])
+        
+            bukaeraData = parser.parse(request.POST['preskripzioData']).date()#datetime.datetime.strptime(request.POST['preskripzioData'], '%b %d, %Y')
+            bukaeraData = bukaeraData.strftime('%Y-%m-%d')
+
+            dispentsazioa = Dispentsazioa(ensaioerrezeta=errezeta_ident, bukaeraData=bukaeraData, ensaioa=ensaioa, dispentsatzailea=request.user)
+            dispentsazioa.save()
+
+
+            #Pazientea ensaioarekin lotuta dagoela ere jarri behar da
+            pazientea = Pazientea.objects.get(ident=request.POST['pazientea'])
+
+            try:
+                paziente_ensaio = PazienteEnsaio.objects.get(pazientea=pazientea, ensaioa=ensaioa)
+
+            #Ez baldin badago erregistratuta jada, erregistratu egin behar da
+            except PazienteEnsaio.DoesNotExist:
+                paziente_ensaio = PazienteEnsaio(pazientea=pazientea, ensaioa=ensaioa)
+                paziente_ensaio.save()
+
+            
+            dispentsatu_beharreko_medikamentu_lista = request.POST.getlist('medikamentua')
+            mezua = dispentsatu_beharreko_medikamentu_lista
 
 
 
-        for dispentsatzeko_medikamentua in dispentsatu_beharreko_medikamentu_lista:
-            #Orain aukeratutako medikamentu bakoitzaren unitateak hartzen dira
-            medikamentuaren_unitateak = int(request.POST[dispentsatzeko_medikamentua])
+            for dispentsatzeko_medikamentua in dispentsatu_beharreko_medikamentu_lista:
+                #Orain aukeratutako medikamentu bakoitzaren unitateak hartzen dira
+                medikamentuaren_unitateak = int(request.POST[dispentsatzeko_medikamentua])
 
-            #Medikamentuaren objektua lortzen da
-            medikamentua = Medikamentua.objects.get(ident=dispentsatzeko_medikamentua)
+                #Medikamentuaren objektua lortzen da
+                medikamentua = Medikamentua.objects.get(ident=dispentsatzeko_medikamentua)
 
 
-            #Dispentsazioa erregistratzen da
-            paziente_dispentsazio = PazienteDispentsazio(ident=dispentsazioa.ident, dispentsazioa=dispentsazioa, paziente=pazientea, medikamentua=medikamentua, dosia=medikamentuaren_unitateak)
-            paziente_dispentsazio.save()
+                #Dispentsazioa erregistratzen da
+                paziente_dispentsazio = PazienteDispentsazio(ident=dispentsazioa.ident, dispentsazioa=dispentsazioa, paziente=pazientea, medikamentua=medikamentua, dosia=medikamentuaren_unitateak)
+                paziente_dispentsazio.save()
 
-            #stock-ean dagoen medikamentuari unitate horiek kentzen zaizkio
-            medikamentua.unitateak = medikamentua.unitateak - medikamentuaren_unitateak
-            medikamentua.save()
+                #stock-ean dagoen medikamentuari unitate horiek kentzen zaizkio
+                medikamentua.unitateak = medikamentua.unitateak - medikamentuaren_unitateak
+                medikamentua.save()
 
-            #Bakarrik onartuko da dispentsazioa medikamenturen bat dispentsatu bazaio
-            onartuta = True
+                #Bakarrik onartuko da dispentsazioa medikamenturen bat dispentsatu bazaio
+                onartuta = True
+
 
         if not onartuta:
             mezua = "Medikamentu bat dispentsatu behar zaio gutxienez"
@@ -1630,7 +1738,7 @@ def errezeta_onartu(request, errezeta_ident):
     errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
 
 
-    return render(request, 'farmaciapp/errezeta_info.html', {'gaizkiJoanDa':gaizkiJoanDa, 'eguneraketa':eguneraketa, 'errezeta_form':errezeta_form, 'mezua':mezua, 'onartuta':onartuta, 'admin':admin, 'errezeta_pendienteak': errezeta_pendienteak, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'gainontzekoEremuak':gainontzekoEremuak, 'ensaioa':ensaioa, 'pazientea_ident':pazientea_ident, 'preskripzioData':preskripzioData, 'hurrengoPreskripzioData':hurrengoPreskripzioData, 'pazientea':pazientea, 'paziente_pisua':paziente_pisua, 'errezetaren_sortzailea':errezetaren_sortzailea, 'ensaioaren_medikamentuak':ensaioaren_medikamentuak})
+    return render(request, 'farmaciapp/errezeta_info.html', {'pendienteak':errezeta_pendienteak.count, 'gaizkiJoanDa':gaizkiJoanDa, 'eguneraketa':eguneraketa, 'errezeta_form':errezeta_form, 'mezua':mezua, 'onartuta':onartuta, 'admin':admin, 'errezeta_pendienteak': errezeta_pendienteak, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'gainontzekoEremuak':gainontzekoEremuak, 'ensaioa':ensaioa, 'pazientea_ident':pazientea_ident, 'preskripzioData':preskripzioData, 'hurrengoPreskripzioData':hurrengoPreskripzioData, 'pazientea':pazientea, 'paziente_pisua':paziente_pisua, 'errezetaren_sortzailea':errezetaren_sortzailea, 'ensaioaren_medikamentuak':ensaioaren_medikamentuak})
 
 
 @login_required
@@ -1706,9 +1814,13 @@ def errezeta_modifikatu(request, errezeta_ident):
     hurrengoPreskripzioData = request.POST['hurrengoPreskripzioData']
     admin = 'admin'
 
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+
     return render(request,
             'farmaciapp/errezeta_info.html',
-            {'admin':admin, 'errezetaren_sortzailea':sortzailea, 'eguneraketa':eguneraketa, 'errezeta_ident':errezeta_ident, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'errezeta_form':errezeta_form, 'ensaioa':ensaioa, 'pazientea_ident':pazientea, 'preskripzioData':preskripzioData, 'hurrengoPreskripzioData':hurrengoPreskripzioData, 'paziente_pisua':pazientePisua})#, 'mota':erabiltzaile_mota, 'farmazia':farmazia} )
+            {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'errezetaren_sortzailea':sortzailea, 'eguneraketa':eguneraketa, 'errezeta_ident':errezeta_ident, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'errezeta_form':errezeta_form, 'ensaioa':ensaioa, 'pazientea_ident':pazientea, 'preskripzioData':preskripzioData, 'hurrengoPreskripzioData':hurrengoPreskripzioData, 'paziente_pisua':pazientePisua})#, 'mota':erabiltzaile_mota, 'farmazia':farmazia} )
 
 
 
@@ -1727,8 +1839,12 @@ def medikamentuaren_ensaioak_ikusi(request, medikamentua_ident):
     farmazia = 'Farmazia'
     admin = 'admin'
 
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+
     #Honek erakutsiko du medikamentu horren ensaioak agertzen diren orrialdea
-    return render(request, 'farmaciapp/medikamentuaren_ensaioak.html', {'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'medikamentua':medikamentua_ident, 'ensaio_lista': ensaio_lista})
+    return render(request, 'farmaciapp/medikamentuaren_ensaioak.html', {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'medikamentua':medikamentua_ident, 'ensaio_lista': ensaio_lista})
 
 
 
@@ -1765,7 +1881,11 @@ def aukeratutako_ensaioak_ezabatu(request):
     farmazia = 'Farmazia'
     admin = 'admin'
 
-    return render(request, 'farmaciapp/ensaioak_bilatu.html', {'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'ensaio_bilaketa_form':ensaio_bilaketa_form, 'ensaio_bilaketa_form2':ensaio_bilaketa_form2, 'ensaio_lista': ezabatu_beharreko_ensaio_lista})
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+
+    return render(request, 'farmaciapp/ensaioak_bilatu.html', {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'ensaio_bilaketa_form':ensaio_bilaketa_form, 'ensaio_bilaketa_form2':ensaio_bilaketa_form2, 'ensaio_lista': ezabatu_beharreko_ensaio_lista})
 
 
 #@login_required
@@ -1793,13 +1913,20 @@ def paziente_berria_erregistratu_botoia(request):
         eratorpena = request.POST['eratorpena']
         ensaioa = request.POST['ensaioa']
 
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
 
     #Hori erakutsiko den orrialdera eramango gaitu
-    return render(request, 'farmaciapp/paziente_berria_sortu.html', {'admin':admin, 'ensaioa':ensaioa, 'errezeta':errezeta, 'eratorpena':eratorpena, 'paziente_form':paziente_form, 'mota':erabiltzaile_mota, 'farmazia':farmazia})
+    return render(request, 'farmaciapp/paziente_berria_sortu.html', {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'ensaioa':ensaioa, 'errezeta':errezeta, 'eratorpena':eratorpena, 'paziente_form':paziente_form, 'mota':erabiltzaile_mota, 'farmazia':farmazia})
 
 @login_required
 def paziente_berria_erregistratu(request):
     #Paziente berria erregistratzeko logika
+
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
 
     #pazientea ondo erregistratu den edo ez adieraziko duen aldagaia
     erregistratuta = False
@@ -1825,7 +1952,7 @@ def paziente_berria_erregistratu(request):
                 paziente_konprobazioa = PazienteEnsaio.objets.get(izena=request.POST['izena'])
                 mezua = 'Paziente hau existitzen da!'
                 paziente_form = PazienteBerriFormularioa()
-                return render(request, 'farmaciapp/paziente_berria_sortu.html', {'paziente_form':paziente_form, 'mezua':mezua})
+                return render(request, 'farmaciapp/paziente_berria_sortu.html', {'pendienteak':errezeta_pendienteak, 'paziente_form':paziente_form, 'mezua':mezua})
 
 
             except:
@@ -1836,14 +1963,14 @@ def paziente_berria_erregistratu(request):
         else:
             print paziente_form.errors
             mezua = 'else'
-            return render(request, 'farmaciapp/paziente_berria_sortu.html', {'mota':erabiltzaile_mota, 'farmazia':farmazia, 'admin':admin, 'titulua':request.POST['ensaioa'],'erregistratuta':erregistratuta,'paziente_form':paziente_form, 'mezua':mezua})
+            return render(request, 'farmaciapp/paziente_berria_sortu.html', {'pendienteak':errezeta_pendienteak, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'admin':admin, 'titulua':request.POST['ensaioa'],'erregistratuta':erregistratuta,'paziente_form':paziente_form, 'mezua':mezua})
 
     else:
         paziente_form = PazienteBerriFormularioa()
-        return render(request, 'farmaciapp/paziente_berria_sortu.html', {'mota':erabiltzaile_mota, 'farmazia':farmazia, 'admin':admin,'titulua':request.POST['ensaioa'],'erregistratuta':erregistratuta,'paziente_form':paziente_form, 'mezua':mezua})
+        return render(request, 'farmaciapp/paziente_berria_sortu.html', {'pendienteak':errezeta_pendienteak, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'admin':admin,'titulua':request.POST['ensaioa'],'erregistratuta':erregistratuta,'paziente_form':paziente_form, 'mezua':mezua})
 
     errezeta_form = ErrezetaBerriEnsaiotikFormularioa()
-    return render(request, 'farmaciapp/paziente_berria_sortu.html', {'mota':erabiltzaile_mota, 'farmazia':farmazia, 'admin':admin,'titulua':request.POST['ensaioa'], 'eratorpena':'paziente', 'errezeta_form':errezeta_form, 'mezua':mezua,'erregistratuta':erregistratuta})
+    return render(request, 'farmaciapp/paziente_berria_sortu.html', {'pendienteak':errezeta_pendienteak.count, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'admin':admin,'titulua':request.POST['ensaioa'], 'eratorpena':'paziente', 'errezeta_form':errezeta_form, 'mezua':mezua,'erregistratuta':erregistratuta})
 
 
 
@@ -1861,7 +1988,11 @@ def erabiltzaile_menua(request):
     #Aplikazioan dauden erabiltzaile guztiak bilatuko dira
     bilaketa_emaitzak = ErabiltzaileProfila.objects.all()
 
-    return render(request, 'farmaciapp/erabiltzaile_kudeaketa_menua.html', {'bilaketa_emaitzak':bilaketa_emaitzak, 'mota':erabiltzaile_mota, 'admin':admin})
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+
+    return render(request, 'farmaciapp/erabiltzaile_kudeaketa_menua.html', {'pendienteak':errezeta_pendienteak.count, 'bilaketa_emaitzak':bilaketa_emaitzak, 'mota':erabiltzaile_mota, 'admin':admin})
 
 
 @login_required
@@ -1884,7 +2015,15 @@ def erabiltzailea_info(request, erabiltzailea):
     #aldagai hau erabiliko da html-an konprobazioa egiteko
     admin = 'admin'
 
-    return render(request, 'farmaciapp/erabiltzaile_info.html', {'erabiltzailea':erabiltzailea, 'erabiltzaile_form':erabiltzaile_form, 'admin':admin, 'mota':erabiltzaile_mota})
+    #Ikusi nahi den erabiltzailearen mota
+    ikusteko_erabiltzaile_mota = ErabiltzaileProfila.objects.filter(erabiltzailea__username=erabiltzailea)[0].zerbitzua
+
+
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+
+    return render(request, 'farmaciapp/erabiltzaile_info.html', {'pendienteak':errezeta_pendienteak.count, 'ikusteko_erabiltzaile_mota':ikusteko_erabiltzaile_mota, 'erabiltzailea':erabiltzailea, 'erabiltzaile_form':erabiltzaile_form, 'admin':admin, 'mota':erabiltzaile_mota})
 
 
 @login_required
@@ -1894,7 +2033,7 @@ def erabiltzailea_eguneratu(request, erabiltzailea):
     if request.method == 'POST':
         erabiltzaile_form = ErabiltzaileFormularioa(data=request.POST)
 
-        if erabiltzaile_form.is_valid():
+        if len(request.POST['username'])>0:
 
             erabiltzailea_profila = ErabiltzaileProfila.objects.get(erabiltzailea__username=erabiltzailea)
 
@@ -1921,6 +2060,17 @@ def erabiltzailea_eguneratu(request, erabiltzailea):
             erabiltzailea_info.save()
 
             erabiltzailea_profila.username = erabiltzailea_info
+
+            #Ikusten dugu ea zerbitzuaren balio berria admin, Farmazia edo Medikua den
+            #Horietako bat baldin bada, balioa aldatuko diogu
+            #Bestela, mantendu egingo diogu
+            motaBerria = request.POST['zerbitzua']
+            if motaBerria == 'admin' or motaBerria == 'Farmazia' or motaBerria == 'Medikua':
+                #Aldatu egingo diogu balioa
+                erabiltzailea_profila.zerbitzua = motaBerria
+           
+
+
             erabiltzailea_profila.save()
 
             erabiltzailea_info.save()
@@ -1941,11 +2091,41 @@ def erabiltzailea_eguneratu(request, erabiltzailea):
     #Aplikazioan dauden erabiltzaile guztiak bilatuko dira
     bilaketa_emaitzak = ErabiltzaileProfila.objects.all()
 
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
 
 
-    return render(request, 'farmaciapp/erabiltzaile_info.html', {'eguneratuta':eguneratuta, 'bilaketa_emaitzak':bilaketa_emaitzak, 'erabiltzailea':erabiltzailea, 'erabiltzaile_form':erabiltzaile_form, 'admin':admin, 'mota':erabiltzaile_mota})
+
+    return render(request, 'farmaciapp/erabiltzaile_info.html', {'pendienteak':errezeta_pendienteak.count, 'eguneratuta':eguneratuta, 'bilaketa_emaitzak':bilaketa_emaitzak, 'erabiltzailea':erabiltzailea, 'erabiltzaile_form':erabiltzaile_form, 'admin':admin, 'mota':erabiltzaile_mota})
+
+@login_required
+def medikamentuaren_unitateak_ezabatu(request, medikamentua_ident):
+    #Medikamentuaren unitateak ezabatzen dira Stock-etik
+
+    #Zenbat unitate geldituko diren unitateak kendu eta gero kalkulatzen da
+    medikamentua = Medikamentua.objects.get(ident=medikamentua_ident)
+    momentuko_stocka = int(medikamentua.unitateak)
+    amaierako_stocka = momentuko_stocka - int(request.POST['medikamentuKantitatea'])
+
+    medikamentua.unitateak = amaierako_stocka
+    medikamentua.save()
 
 
+    #Jakiteko zein motako erabiltzailea den
+    erabiltzaile_mota = ErabiltzaileProfila.objects.filter(erabiltzailea=request.user)[0].zerbitzua
+    #aldagai hau erabiliko da html-an konprobazioa egiteko
+    farmazia = 'Farmazia'
+    admin = 'admin'
+
+    #Aldagai honek adieraziko du medikamentua eguneratua izan dela
+    eguneratuta = True
+
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+
+
+    return render(request, 'farmaciapp/medikamentua_info.html', {'pendienteak':errezeta_pendienteak.count, 'eguneratuta':eguneratuta, 'admin':admin, 'mota':erabiltzaile_mota})
 
 
 @login_required
@@ -1969,7 +2149,11 @@ def erabiltzailea_ezabatu(request, erabiltzailea):
     #Erabiltzailea ezabatu den edo ez jakiteko flag bat
     ezabatuta = True
 
-    return render(request, 'farmaciapp/erabiltzaile_kudeaketa_menua.html', {'ezabatuta':ezabatuta, 'bilaketa_emaitzak':bilaketa_emaitzak, 'erabiltzailea':erabiltzailea, 'admin':admin, 'mota':erabiltzaile_mota})
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+
+    return render(request, 'farmaciapp/erabiltzaile_kudeaketa_menua.html', {'pendienteak':errezeta_pendienteak.count, 'ezabatuta':ezabatuta, 'bilaketa_emaitzak':bilaketa_emaitzak, 'erabiltzailea':erabiltzailea, 'admin':admin, 'mota':erabiltzaile_mota})
 
 
 @login_required
@@ -1987,9 +2171,13 @@ def erabiltzailea_gehitu(request):
 
     erregistratuta = False
 
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+
     return render(request,
             'farmaciapp/erregistratu.html',
-            {'admin':admin, 'mota':erabiltzaile_mota, 'erabiltzaile_form': erabiltzaile_form, 'erabiltzaile_profil_form': erabiltzaile_profil_form, 'erregistratuta': erregistratuta} )
+            {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'mota':erabiltzaile_mota, 'erabiltzaile_form': erabiltzaile_form, 'erabiltzaile_profil_form': erabiltzaile_profil_form, 'erregistratuta': erregistratuta} )
 
 
 @login_required
@@ -2007,8 +2195,12 @@ def pdf_eskuratu(request, ensaioa_titulua, dispentsazioa_ident):
     dispentsatzailea = Dispentsazioa.objects.get(ident=dispentsazioa_ident).dispentsatzailea
      
     #Errezetaren gainontzeko informazioa lortzen da  
-    errezeta = EnsaioErrezeta.objects.get(ident=dispentsazioa_ident)
+    errezeta = EnsaioErrezeta.objects.get(ident=Dispentsazioa.objects.get(ident=dispentsazioa_ident).ensaioerrezeta)
     gainontzekoEremuak = errezeta.gainontzekoEremuak
+
+    #Ensaioaren informazioa aterako da
+    ikertzailea = Ensaioa.objects.get(titulua=ensaioa_titulua).ikertzailea
+    promotorea = Ensaioa.objects.get(titulua=ensaioa_titulua).promotorea
 
 
     # Create the HttpResponse object with the appropriate PDF headers.
@@ -2017,7 +2209,7 @@ def pdf_eskuratu(request, ensaioa_titulua, dispentsazioa_ident):
 
     c = canvas.Canvas(response)
 
-    c.setFont('Helvetica', 12) #Formatua, letra mota eta tamaina
+    c.setFont('Helvetica-Bold', 18) #Formatua, letra mota eta tamaina
 
     c.drawString(50,770,'Dispensacion: ' + dispentsazioa_ident)#(alto= 0 y 800) y ancho (entre 0 y 700)
 
@@ -2025,13 +2217,82 @@ def pdf_eskuratu(request, ensaioa_titulua, dispentsazioa_ident):
 
     #Ancho inicia desde cero de izquierda a derecha
 
+
     c.line(50,760,580,760) # Para hacer una linea horizontal
 
-    c.drawString(50,730, 'Paciente: ' + str(paziente_id.ident))# Para escribir cualquier tipo de texto
-    c.drawString(50,700, 'Fecha de Dispensacion: ' + str(bukaeraData))# Para escribir cualquier tipo de texto
-    c.drawString(50,670, 'Encargado de la dispensacion: ' + dispentsatzailea)# Para escribir cualquier tipo de texto
-    c.drawString(50,640, gainontzekoEremuak)# Para escribir cualquier tipo de texto
+    c.setFont('Helvetica', 12) #Formatua, letra mota eta tamaina
     
+    c.drawString(50,730, 'Titulo del ensayo: ' + str(ensaioa_titulua))# Para escribir cualquier tipo de texto
+    c.drawString(50,700, 'Nombre de paciente: ' + str(paziente_id.izena))# Para escribir cualquier tipo de texto
+    c.drawString(50,670, 'Numero de paciente: ' + str(paziente_id.ident))# Para escribir cualquier tipo de texto
+
+    c.setFont('Helvetica-Bold', 18) #Formatua, letra mota eta tamaina
+
+    c.drawString(180, 640, 'MEDICAMENTO')
+
+    c.setFont('Helvetica', 12) #Formatua, letra mota eta tamaina
+
+    #Medikamentuak zerrendatuko dira
+    altuera = 610
+    for med in medikamentuak:
+        #Dagokion medikamentuaren dosia kalkulatuko da:
+        dosia = PazienteDispentsazio.objects.get(dispentsazioa=dispentsazioa_ident, medikamentua=med.get('medikamentua')).dosia
+        c.drawString(120, altuera, '- ' + med.get('medikamentua') + '       Unidades: ' + str(dosia))
+        altuera = altuera - 30
+
+
+    c.drawString(50,altuera, 'Medico investigador: ' + str(ikertzailea))# Para escribir cualquier tipo de texto
+    altuera = altuera - 30
+    c.drawString(50,altuera, 'Promotor: ' + str(promotorea))# Para escribir cualquier tipo de texto
+    altuera = altuera - 30
+    c.drawString(50,altuera, 'Fecha de Dispensacion: ' + str(bukaeraData))# Para escribir cualquier tipo de texto
+    altuera = altuera - 30
+    c.drawString(50,altuera, 'Encargado de la dispensacion: ' + dispentsatzailea)# Para escribir cualquier tipo de texto
+    altuera = altuera - 30
+    c.drawString(50,altuera, 'Servicio: ' + Ensaioa.objects.get(titulua=ensaioa_titulua).zerbitzua)# Para escribir cualquier tipo de texto
+
+
+    altuera = altuera - 30
+    c.drawString(50,altuera, gainontzekoEremuak)# Para escribir cualquier tipo de texto
+    altuera = altuera - 30
+
+    c.drawString(50,altuera, 'Firmado: ' + str(request.user))# Para escribir cualquier tipo de texto
+    altuera = altuera - 30
+
+
+    c.setFont('Helvetica-Bold', 18) #Formatua, letra mota eta tamaina
+
+    c.line(30,altuera,580,altuera) # Para hacer una linea horizontal
+    altuerakuadro1 = altuera
+    altuera = altuera - 30
+
+
+    c.drawString(150, altuera, 'MEDICAMENTOS DISPENSADOS')
+
+    c.setFont('Helvetica', 12) #Formatua, letra mota eta tamaina
+
+    altuera = altuera - 30
+
+
+
+    for med in medikamentuak:
+        #Dagokion medikamentuaren dosia kalkulatuko da:
+        dosia = PazienteDispentsazio.objects.get(dispentsazioa=dispentsazioa_ident, medikamentua=med.get('medikamentua')).dosia
+        c.drawString(120, altuera, '- ' + med.get('medikamentua') + '       Unidades: ' + str(dosia))
+        altuera = altuera - 30
+
+    c.drawString(50,altuera, 'Fecha: ' + time.strftime("%Y-%m-%d"))# Para escribir cualquier tipo de texto
+    altuera = altuera - 30
+    c.drawString(50,altuera, 'Farmaceutico/a: ' + str(request.user))# Para escribir cualquier tipo de texto
+    altuera = altuera - 30
+
+    c.line(30,altuera,580,altuera) # Para hacer una linea horizontal
+    c.line(30,altuerakuadro1,30,altuera) # Para hacer una linea horizontal
+    c.line(580,altuerakuadro1,580,altuera) # Para hacer una linea horizontal
+
+
+
+
     c.showPage()
     c.save() # Para guardar el PDF
 

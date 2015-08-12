@@ -44,6 +44,7 @@ class EnsaioBerriFormularioa(forms.ModelForm):
 
 
     class Meta:
+        
 		model = Ensaioa
 
 
@@ -71,6 +72,7 @@ class EnsaioBilaketaFormularioa(forms.ModelForm):
 
 
     class Meta:
+        fields = '__all__'
         model = Ensaioa
         #widgets = {
         #    'hasieraData': SuitSplitDateTimeWidget,
@@ -91,6 +93,7 @@ class EnsaioBilaketaFormularioa2(forms.ModelForm):
 
 
     class Meta:
+        fields = '__all__'
         model = PazienteEnsaio
 
 
@@ -118,6 +121,7 @@ class MedikamentuBilaketaFormularioa(forms.ModelForm):
         
 
     class Meta:
+        fields = '__all__'
         model = Medikamentua
 
 class MedikamentuBilaketaFormularioa2(forms.ModelForm):
@@ -132,6 +136,7 @@ class MedikamentuBilaketaFormularioa2(forms.ModelForm):
 
 
     class Meta:
+        fields = '__all__'
         model = MedikamentuEnsaio
 
 
@@ -159,6 +164,7 @@ class ErrezetaBerriFormularioa(forms.ModelForm):
 
 
     class Meta:
+        fields = '__all__'
         model = EnsaioErrezeta
 
 
@@ -183,6 +189,7 @@ class ErrezetaBerriEnsaiotikFormularioa(forms.ModelForm):
 
 
     class Meta:
+        fields = '__all__'
         model = EnsaioErrezeta
 
 class DispentsazioFormularioa(forms.ModelForm):
@@ -205,6 +212,7 @@ class DispentsazioFormularioa(forms.ModelForm):
         self.fields['dosia'].required = False
 
     class Meta:
+        fields = '__all__'
         model = PazienteDispentsazio
 
 
@@ -227,6 +235,7 @@ class MedikamentuBerriFormularioa(forms.ModelForm):
 
 
     class Meta:
+        fields = '__all__'
         model = Medikamentua
 
 
@@ -252,6 +261,7 @@ class ErrezetaModifikatuFormularioa(forms.ModelForm):
 
 
     class Meta:
+        fields = '__all__'
         model = EnsaioErrezeta
 
 
@@ -266,4 +276,5 @@ class PazienteBerriFormularioa(forms.ModelForm):
 
 
     class Meta:
+        fields = '__all__'
         model = Pazientea

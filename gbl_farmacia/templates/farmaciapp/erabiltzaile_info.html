@@ -6,6 +6,41 @@
         <link href="http://getbootstrap.com/examples/dashboard/dashboard.css" rel="stylesheet">
         <!-- Is anyone getting tired of repeatedly entering the header over and over?? -->
         <title>Erabiltzailea: {{erabiltzailea}}</title>
+
+        {% load staticfiles %}
+        <script src="{% static "js/jquery-1.11.1.js" %}"></script>
+        <script src="{% static "js/alertify.min.js" %}"></script>
+        <!-- include the core styles -->
+        <link rel="stylesheet" href="{% static "js/alertify.core.css" %}" />
+        <!-- include a theme, can be included into the core instead of 2 separate files -->
+        <link rel="stylesheet" href="{% static "js/alertify.default.css" %}" />
+        <script>
+
+           
+            function konfirmazioa(form_id){
+                   alertify.confirm("Ziur al zaude erabakiarekin?", function (e) {
+
+                if (e) {
+                    
+                    document.getElementById(form_id).submit();
+                    
+                } else {
+
+                    //return false;
+                    // user clicked "cancel"
+
+                }
+                });
+                   
+                   
+            }
+
+
+        </script>
+
+
+
+
     </head>
 
     <body>
@@ -57,6 +92,7 @@
           <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
           <span class="sr-only">Informazioa: </span>
             Informazioa ondo eguneratu da!
+            
         </div><br/><br/>
         <input class="btn btn-primary" type=button name="botonAtzera" onClick="location.href='/farmaciapp/aukera_menua/erabiltzaile_menua/'" value='Atzera'>
 
@@ -72,13 +108,17 @@
             {% csrf_token %}
 
             {{erabiltzaile_form.as_p}}
+
+            <b>Zerbitzua:</b> <input type="text" id="zerbitzua" name="zerbitzua" value="{{ikusteko_erabiltzaile_mota}}"><br/><br/>
             
 
             
-            <input class="btn btn-primary" type="submit" value="Erabiltzailearen Datuak Eguneratu">
+            <input class="btn btn-primary" type=button onclick="konfirmazioa('erabiltzailea_moldatu')" value="Erabiltzailearen Datuak Eguneratu">
         </form>
 
         <br/><br/>
+
+        
 
 
         <form id="erabiltzailea_ezabatu" action="/farmaciapp/aukera_menua/erabiltzaile_menua/erabiltzailea/{{erabiltzailea}}/erabiltzailea_ezabatu/" method="POST">
@@ -89,7 +129,7 @@
             
 
             
-            <input class="btn btn-primary" type="submit" value="Erabiltzailea Ezabatu">
+            <input class="btn btn-primary" type=button onclick="konfirmazioa('erabiltzailea_ezabatu')" value="Erabiltzailea Ezabatu">
         </form>
 
         {% endif %}
