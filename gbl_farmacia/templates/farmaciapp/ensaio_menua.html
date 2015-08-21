@@ -1,11 +1,31 @@
 <!DOCTYPE html>
 <html>
     <head>
-         <link rel="icon" href="http://getbootstrap.com/favicon.ico">
+        <link rel="icon" href="http://getbootstrap.com/favicon.ico">
         <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="http://getbootstrap.com/examples/dashboard/dashboard.css" rel="stylesheet">
         <!-- Is anyone getting tired of repeatedly entering the header over and over?? -->
+
+        {% load staticfiles %}
+
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+        <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+        <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+        <script src="{% static "js/jquery-farmaciapp.js" %}"></script>
+        <script src="{% static "js/alertify.min.js" %}"></script>
+        <!-- include the core styles -->
+        <link rel="stylesheet" href="{% static "js/alertify.core.css" %}" />
+        <!-- include a theme, can be included into the core instead of 2 separate files -->
+        <link rel="stylesheet" href="{% static "js/alertify.default.css" %}" />
+
         <title>Ensaio Klinikoen Kudeaketa</title>
+
+
+        
+
+
+
+
     </head>
 
     <body>
@@ -59,7 +79,11 @@
         {% if mota == farmazia or mota == admin %}
         
 
-        <input class="btn btn-primary" type=button name="ensaioen_historikoa_ikusi" onClick="location.href='/farmaciapp/aukera_menua/ensaio_kontsulta/ensaioen_historikoa/'" value='Ensaioen Historikoa Ikusi'>
+        <input class="btn btn-primary" type=button name="ensaioen_historikoa_ikusi" onClick="location.href='/farmaciapp/aukera_menua/ensaio_kontsulta/ensaioen_historikoa/'" value='Ensaioen Historikoa Ikusi'>  &nbsp 
+           
+            <button type="button" class="btn btn-info" onClick="informazioa('Itxita dauden ensaioak eta haiei dagozkien dispentsazioak kontsultatzeko aukera')">
+               <span class="glyphicon glyphicon-info-sign"></span> 
+            </button>
         
 
         <br/><br/>

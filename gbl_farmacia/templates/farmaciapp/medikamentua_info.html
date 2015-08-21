@@ -1,52 +1,26 @@
 <!DOCTYPE html>
 <html>
     <head>
-         <link rel="icon" href="http://getbootstrap.com/favicon.ico">
+        <link rel="icon" href="http://getbootstrap.com/favicon.ico">
         <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="http://getbootstrap.com/examples/dashboard/dashboard.css" rel="stylesheet">
         <!-- Is anyone getting tired of repeatedly entering the header over and over?? -->
-        <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
-  <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
-  <link rel="stylesheet" href="/resources/demos/style.css">
-  <script>
-  $(function() {
-    $( ".vDateField" ).datepicker({ dateFormat: 'yy-mm-dd' }).val();
-  });
-  </script>
-  
-        <title>Medikamentua: {{medikamentua_ident}}</title>
 
         {% load staticfiles %}
-        <script src="{% static "js/jquery-1.11.1.js" %}"></script>
+
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+        <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+        <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+        <script src="{% static "js/jquery-farmaciapp.js" %}"></script>
         <script src="{% static "js/alertify.min.js" %}"></script>
         <!-- include the core styles -->
         <link rel="stylesheet" href="{% static "js/alertify.core.css" %}" />
         <!-- include a theme, can be included into the core instead of 2 separate files -->
         <link rel="stylesheet" href="{% static "js/alertify.default.css" %}" />
-        <script>
+  
+        <title>Medikamentua: {{medikamentua_ident}}</title>
 
-           
-            function konfirmazioa(form_id){
-                   alertify.confirm("Ziur al zaude erabakiarekin?", function (e) {
-
-                if (e) {
-                    
-                    document.getElementById(form_id).submit();
-                    
-                } else {
-
-                    //return false;
-                    // user clicked "cancel"
-
-                }
-                });
-                   
-                   
-            }
-
-
-        </script>
+        
 
         
     </head>
@@ -65,8 +39,8 @@
         </div>
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="/farmaciapp/">Hasiera<span class="glyphicon glyphicon-home" aria-hidden="true"></span></a></li>
-                <li><a href="/farmaciapp/logout/">Sesioa itxi<span class="glyphicon glyphicon-log-out" aria-hidden="true"></span></a><br/></li>
+                <li><a href="/farmaciapp/">Hasiera <span class="glyphicon glyphicon-home" aria-hidden="true"></span></a></li>
+                <li><a href="/farmaciapp/logout/">Sesioa itxi <span class="glyphicon glyphicon-log-out" aria-hidden="true"></span></a><br/></li>
 
             </ul>
         </div></div></div>
@@ -87,7 +61,7 @@
                 {% endif %}
                 <br/>
                 <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/medikamentu_bilaketa/">Atzera  <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span></a><br/>
-                <a href="/farmaciapp/aukera_menua">Hasiera  <span class="glyphicon glyphicon-ahome" aria-hidden="true"></span></a>
+                <a href="/farmaciapp/aukera_menua">Hasiera  <span class="glyphicon glyphicon-home" aria-hidden="true"></span></a>
         </div>
 
 
@@ -117,24 +91,35 @@
 
         
         <br/><br/>
-        <input class="btn btn-primary" type=button name="botonMedikamentuarenEnsaioakIkusi" onClick="location.href='/farmaciapp/aukera_menua/medikamentu_kontsulta/medikamentu_bilaketa/medikamentua/{{ident}}/ensaioak/'" value='Medikamentuaren Ensaioak Ikusi'>
+        <input class="btn btn-primary" type=button name="botonMedikamentuarenEnsaioakIkusi" onClick="location.href='/farmaciapp/aukera_menua/medikamentu_kontsulta/medikamentu_bilaketa/medikamentua/{{identKodetua}}/ensaioak/'" value='Medikamentuaren Ensaioak Ikusi'>  &nbsp 
+           
+            <button type="button" class="btn btn-info" onClick="informazioa('Uneko medikamentua esleituta dagoen ensaioen zerrenda bat erakutsiko da.')">
+               <span class="glyphicon glyphicon-info-sign"></span> 
+            </button>
         <br/>
 
-        Stock-ean dauden unitateak ikustea ere falta da (SUPOSATZEN DUT HAU VIEW-TIK EGIN BEHARKO DELA)
         <br/>
 
         
 
-        <br/><br/>
 
         {% if admin == mota %}
 
-        <input class="btn btn-primary" type=button name="medikamentuaEzabatu" onClick="location.href='/farmaciapp/aukera_menua/medikamentu_kontsulta/medikamentu_bilaketa/medikamentua/{{ident}}/ezabatu/'" value='Medikamentua Ezabatu'>
+        <form id="medikamentua_kendu" action="/farmaciapp/aukera_menua/medikamentu_kontsulta/medikamentu_bilaketa/medikamentua/{{identKodetua}}/ezabatu/" method="POST">
+                {% csrf_token %}
+                            
+                <input class="btn btn-danger" type=button onclick="konfirmazioa('medikamentua_kendu')" value="Medikamentua Ezabatu">
+        </form>
+
+
+
+
+        
         <br/>
         <br/>
 
 
-        <form id="unitateak_kendu" action="/farmaciapp/aukera_menua/medikamentu_kontsulta/medikamentu_bilaketa/medikamentua/{{ident}}/unitateak_kendu/" method="POST">
+        <form id="unitateak_kendu" action="/farmaciapp/aukera_menua/medikamentu_kontsulta/medikamentu_bilaketa/medikamentua/{{identKodetua}}/unitateak_kendu/" method="POST">
             
                 {% csrf_token %}
 
@@ -142,7 +127,7 @@
 
 
                 
-                <input class="btn btn-primary" type=button onclick="konfirmazioa('unitateak_kendu')" value="Unitateak Ezabatu">
+                <input class="btn btn-sm btn-danger" type=button onclick="konfirmazioa('unitateak_kendu')" value="Unitateak Ezabatu">
         </form>
 
 

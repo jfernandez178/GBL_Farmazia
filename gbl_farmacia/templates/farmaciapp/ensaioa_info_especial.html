@@ -1,21 +1,28 @@
 <!DOCTYPE html>
 <html>
     <head>
-         <link rel="icon" href="http://getbootstrap.com/favicon.ico">
+        <link rel="icon" href="http://getbootstrap.com/favicon.ico">
         <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="http://getbootstrap.com/examples/dashboard/dashboard.css" rel="stylesheet">
         <!-- Is anyone getting tired of repeatedly entering the header over and over?? -->
+
+        {% load staticfiles %}
+
         <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
-  <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
-  <link rel="stylesheet" href="/resources/demos/style.css">
-  <script>
-  $(function() {
-    $( ".vDateField" ).datepicker(({ dateFormat: 'yy-mm-dd' }).val();
-  });
-  </script>
+        <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+        <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+        <script src="{% static "js/jquery-farmaciapp.js" %}"></script>
+        <script src="{% static "js/alertify.min.js" %}"></script>
+        <!-- include the core styles -->
+        <link rel="stylesheet" href="{% static "js/alertify.core.css" %}" />
+        <!-- include a theme, can be included into the core instead of 2 separate files -->
+        <link rel="stylesheet" href="{% static "js/alertify.default.css" %}" />
   
         <title>Ensaio-Bilaketa</title>
+
+        
+
+
     </head>
 
     <body>
@@ -32,8 +39,8 @@
         </div>
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="/farmaciapp/">Hasiera<span class="glyphicon glyphicon-home" aria-hidden="true"></span></a></li>
-                <li><a href="/farmaciapp/logout/">Sesioa itxi<span class="glyphicon glyphicon-log-out" aria-hidden="true"></span></a><br/></li>
+                <li><a href="/farmaciapp/">Hasiera <span class="glyphicon glyphicon-home" aria-hidden="true"></span></a></li>
+                <li><a href="/farmaciapp/logout/">Sesioa itxi <span class="glyphicon glyphicon-log-out" aria-hidden="true"></span></a><br/></li>
 
             </ul>
         </div></div></div>
@@ -79,6 +86,14 @@
 
         Monitorea: {{monitorea}}<br/><br/>
 
+        Monitorearen Fax-a: {{monitoreaFax}}<br/><br/>
+
+        Monitorearen Email-a: {{monitoreaEmail}}<br/><br/>
+
+        Monitorearen Telefonoa: {{monitoreaTel}}<br/><br/>
+
+        Monitorearen Mugikorra: {{monitoreaMugikor}}<br/><br/>
+
         Ikertzailea: {{ikertzailea}}<br/><br/>
 
         Komentarioak: {{komentarioak}}<br/><br/>
@@ -86,18 +101,24 @@
         Medikamentuak:<br/>
         {% for m in medikamentuak %}
             <li>
-                    {{ m.medikamentua }}</a></li>
+                    {{ m.medikamentua.ident }}</a></li>
         {% endfor %}
         <br/><br/>
-        <input class="btn btn-primary" type=button name="botonErrezetaGehituEnsaiotik" onClick="location.href='/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{titulua}}/errezeta_berria_botoia/'" value='Errezeta Gehitu'><br/><br/><br/>
-        
-        Todo: ERREZETA BAT ESKATZEN DA, ETA HAU EGITEAN, FARMAZIAKO ENKARGATUAK IKUSI AHALKO DUEN LISTA BATETAN PILATUKO DA. LISTA HAU, ERREZETA EGIN DUEN MEDIKUAK BERAK (ESPECIAL-AK) ERE IKUSI AHALKO LUKE. (BORRATU EDO ALDATZEKO)
-        <br/>
-        Dispentsazioak ikusteko aukera (bilaketan paziente bat espezifikatu bada, paziente horrenak, bestela bilatu)
+        <input class="btn btn-primary" type=button name="botonErrezetaGehituEnsaiotik" onClick="location.href='/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{protokoloZenbakia}}/errezeta_berria_botoia/'" value='Errezeta Gehitu'>  &nbsp 
+           
+            <button type="button" class="btn btn-info" onClick="informazioa('Uneko ensaioari dagokion paziente baten gaineko errezeta berri bat sortzeko aukera.')">
+               <span class="glyphicon glyphicon-info-sign"></span> 
+            </button>
         <br/><br/>
+        
+        
 
         {% if mota == farmazia or mota == admin %}
-        <input class="btn btn-primary" type=button name="botonMedikamentuakGehituEnsaioari" onClick="location.href='/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{titulua}}/medikamentuak/'" value='Medikamentuak Gehitu Ensaioari'>
+        <input class="btn btn-primary" type=button name="botonMedikamentuakGehituEnsaioari" onClick="location.href='/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{protokoloZenbakia}}/medikamentuak/'" value='Medikamentuak Gehitu Ensaioari'>  &nbsp 
+           
+            <button type="button" class="btn btn-info" onClick="informazioa('Uneko ensaioari medikamentuak esleitzeko aukera.')">
+               <span class="glyphicon glyphicon-info-sign"></span> 
+            </button>
 
         {% endif %}
 
@@ -105,20 +126,44 @@
 
 
 
-        <form id="dispentsazioak_ikusi" method="post" action="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{titulua}}/dispentsazioak/" enctype="multipart/form-data">
+        <form id="dispentsazioak_ikusi" method="post" action="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{protokoloZenbakia}}/dispentsazioak/" enctype="multipart/form-data">
             {% csrf_token %}
 
             {{ dispentsazioak_form.as_p }}
 
-            <input class="btn btn-primary" type="submit" name="ikusi_dispentsazioak" value="Dispentsazioak Aztertu"/>
+            <input class="btn btn-primary" type="submit" name="ikusi_dispentsazioak" value="Dispentsazioak Aztertu"/>  &nbsp 
+           
+            <button type="button" class="btn btn-info" onClick="informazioa('Uneko ensaioarekin lotuta dauden dispentsazioak aztertzeko aukera.')">
+               <span class="glyphicon glyphicon-info-sign"></span> 
+            </button>
            
         </form>
 
-        <br/><br/>
+        <br/>
 
         {% if mota == farmazia or mota == admin %}
 
-        <input class="btn btn-primary" type=button name="botonEnsaioItxi" onClick="location.href='/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{titulua}}/ensaioa_itxi/'" value='Ensaioa Itxi'>
+        <input class="btn btn-primary" type=button name="botonEnsaioarenMedikamentuakAztertu" onClick="location.href='/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{protokoloZenbakia}}/medikamentuak_aztertu/'" value='Ensaioaren Medikamentuak Aztertu'>  &nbsp 
+           
+            <button type="button" class="btn btn-info" onClick="informazioa('Ensaioari dagozkion medikamentuen informazioa ikusteko pantaila, zenbat unitate egon diren eta zenbat dispentsatu diren aztertzeko.')">
+               <span class="glyphicon glyphicon-info-sign"></span> 
+            </button>
+
+        <br/><br/>
+
+        <form id="ensaioa_ixtea" action="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{protokoloZenbakia}}/ensaioa_itxi/" method="POST">
+            
+                {% csrf_token %}
+
+                                
+                <input class="btn btn-primary" type=button onclick="konfirmazioa('ensaioa_ixtea')" value="Ensaioa Itxi">   &nbsp 
+           
+            <button type="button" class="btn btn-info" onClick="informazioa('Ensaioa behin betiko ixteko aukera. Ensaio horren gainean ezingo da eragiketa gehiago egin ezta berriz ireki ere.')">
+               <span class="glyphicon glyphicon-info-sign"></span> 
+            </button>
+
+        </form>
+
 
         {% endif %}
 
@@ -129,8 +174,6 @@
 
 
         
-        <br/>
-
         <!--<input class="btn btn-primary" type=button name="botonAtzera" onClick="location.href='../..'" value='Atzera'>
         <br/><br/>
         <input class="btn btn-primary" type=button name="botonHome" onClick="location.href='/farmaciapp/aukera_menua'" value='Hasiera'>-->

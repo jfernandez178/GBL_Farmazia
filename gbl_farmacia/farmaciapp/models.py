@@ -15,19 +15,28 @@ import time
 class Medikamentua(models.Model):
     #ident izango da medikamentuaren gako nagusia
     ident = models.CharField(primary_key=True, max_length=128)
+
+    #ondorengo aldagaia url-etan arazorik ez emateko ident kodetua da
+    identKodetua = models.IntegerField(blank=True, null=True)
+
     kit = models.IntegerField(blank=True)
-    lote = models.IntegerField(blank=True)
+    lote = models.CharField(blank=True, max_length=128)
     kaduzitatea = models.DateField(blank=True)
     bidalketaZenbakia = models.IntegerField(blank=True)
     bidalketaData = models.DateField(blank=True)
 
     #medikamentu horren zenbat unitate dauden Stock-ean adierazteko
     unitateak = models.IntegerField(default=1)
+
+    #Jakiteko historian zehar zernabt unitate izan diren Stock-ean
+    unitateak_historikoa = models.IntegerField(default=0, null=True, blank=True)
+
+
     bidalketaOrdua = models.TimeField(blank=True, null=True)
 
     #Medikamentuaren instantzia eskuratzen denean identzifikatzailearen bidez izendatuko da
     def __unicode__(self):
-        return self.ident
+        return unicode(self.identKodetua)
 
 #Pazienteari dagokion entitatea eta bere erlazioak
 class Pazientea(models.Model):
@@ -62,15 +71,20 @@ class Ensaioa(models.Model):
     #bukaera datak null balioa izatea onartu behar da, ensaioa sortzerakoan ez baitu bukaera datarik izago esleituta
     bukaeraData = models.DateField(blank=True, null=True)
 
-    protokoloZenbakia = models.IntegerField(blank=True)
+    #Ensaio bakoitzak bakarra den protokolo zenbaki bat izango du
+    protokoloZenbakia = models.CharField(unique=True, max_length=128)
 
-    #titulua bakarra izango denez ensaio bakoitzarentzat, gako nagusia izango da
-    titulua = models.CharField(primary_key=True, max_length=128,unique=True)
+    #titulua bakarra izango denez ensaio bakoitzarentzat ziurtasun osoz, gako nagusia izango da
+    titulua = models.CharField(primary_key=True, max_length=600, unique=True)
     
     zerbitzua = models.CharField(max_length=128)
     promotorea = models.CharField(max_length=128)
     estudioMota = models.CharField(max_length=128)
     monitorea = models.CharField(max_length=128)
+    monitoreaEmail = models.CharField(max_length=240, blank=True, null=True)
+    monitoreaFax = models.IntegerField(blank=True, null=True)
+    monitoreaTel = models.IntegerField(blank=True, null=True)
+    monitoreaMugikor = models.IntegerField(blank=True, null=True)
     ikertzailea = models.CharField(max_length=128)
 
     #Komentarioak atributuaren balioa hutsik uztea baimendu beharra dago, ez delako betetzeko den derrigorrezko eremu bat izango
@@ -78,9 +92,9 @@ class Ensaioa(models.Model):
 
 
 
-    #Ensaioaren instantzia eskuratzen denean tituluaren bidez izendatuko da
+    #Ensaioaren instantzia eskuratzen denean protokoloZenbakiaren bidez izendatuko da, titulua baino laburragoa baita
     def __unicode__(self):
-        return self.titulua
+        return self.protokoloZenbakia
 
 
 
@@ -126,8 +140,8 @@ class PazienteDispentsazio(models.Model):
     #identifikatzaile hau Dispentsazioaren identifikatzailearen berdina izango da
     ident = models.IntegerField(default=1)
     medikamentua = models.ForeignKey(Medikamentua, null=True)
-    dispentsazioa = models.ForeignKey(Dispentsazioa, null=True)
-    paziente = models.ForeignKey(Pazientea, null=True)
+    dispentsazioa = models.ForeignKey(Dispentsazioa, null=True, related_name="dispentsazioa_pazientearekiko")
+    paziente = models.ForeignKey(Pazientea, null=True, related_name="pazientea_dispentsazioan")
     dosia = models.IntegerField(null=True, blank=True) 
 
     #PazienteDispentsazioren instantzia eskuratzen denean identifikatzailearen bidez izendatuko da; hau da, dispentsazioaren identifikatzailearen bitartez
@@ -151,6 +165,9 @@ class EnsaioErrezeta(models.Model):
 
     #Eremu zabal eta ireki bat izango da nahi diren eremuak adierazteko
     gainontzekoEremuak = models.TextField(null=True, blank=True)
+
+    #Errezetaren izena zein izango den adierazteko
+    errezetaIzena = models.CharField(max_length=300, blank=True, null=True)
 
 
     #EnsaioErrezetaren instantzia eskuratzen denean identifikatzailearen bidez izendatuko da
@@ -180,9 +197,13 @@ class ErabiltzaileProfila(models.Model):
     abizena1 = models.CharField(max_length=128)
     abizena2 = models.CharField(max_length=128)
     zerbitzua = models.CharField(max_length=128, default=1, choices=(('Farmazia', 'Farmazia'), ('Medicina', 'Medicina')))
+
+    #Adibidez, onkologia, radiologia, etab.
+    azpizerbitzua = models.CharField(max_length=300, null=True, blank=True)
     #...???
 
     # modelo honen instantzia bat atzitzen denean zein izenekin definituko den instantzia hori adierazten du
     def __unicode__(self):
         return self.erabiltzailea.username
+
 

@@ -4,11 +4,15 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse
 from farmaciapp.forms import ErabiltzaileFormularioa, ErabiltzaileProfilFormularioa, EnsaioBerriFormularioa, EnsaioBilaketaFormularioa, EnsaioBilaketaFormularioa2, MedikamentuBilaketaFormularioa, MedikamentuBilaketaFormularioa2, Medikamentua, ErrezetaBerriFormularioa, DispentsazioFormularioa, ErrezetaBerriEnsaiotikFormularioa, MedikamentuBerriFormularioa, ErrezetaModifikatuFormularioa, PazienteBerriFormularioa
 from farmaciapp.models import Ensaioa, ErabiltzaileProfila, PazienteEnsaio, Pazientea, EnsaioErrezeta, MedikamentuEnsaio, Dispentsazioa, PazienteDispentsazio
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.contrib.auth.models import User
 import datetime
 from dateutil import parser
 import time
+
+from random import randint
+import sys
+
 
 #PDF dokumentuen sorrerarako beharrezkoak
 from reportlab.pdfgen import canvas
@@ -204,6 +208,13 @@ def ensaioak_bilatu(request):
     ondo = ''
     ensaio_bilaketa_form2 = []
     pazientea_duten_ensaioak = []
+
+    flagNoiztik = False
+    flagNoizarte = False
+
+    #zenbat ensaio aurkitu diren adierazten duen aldagaia
+    zenbat_ensaio = 0
+
     if 'pazientea' in request.POST:
         pazientea_id = request.POST['pazientea']
         try:
@@ -226,15 +237,159 @@ def ensaioak_bilatu(request):
             if(pazientea!=None):
                 ondo = 'pazientea!=none'
 
-                bilaketa_emaitzak = Ensaioa.objects.filter(Q(pazientea_ensaioan__pazientea=pazientea) & Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__icontains=request.POST['hasieraData']) & Q(egoera='irekita'))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
-                    #bilaketa_emaitzak_3 = PazienteEnsaio.objects.filter(Q(pazientea=pazientea) & Q(ensaioa=bilaketa_emaitzak_2)).values('ensaioa')#Q(ensaioa__ikertzailea__icontains=request.POST['ikertzailea']) & Q(ensaioa__monitorea__icontains=request.POST['monitorea']) & Q(ensaioa__estudioMota__icontains=request.POST['estudioMota']) & Q(ensaioa__promotorea__icontains=request.POST['promotorea']) & Q(ensaioa__zerbitzua__icontains=request.POST['zerbitzua']) & Q(ensaioa__titulua__icontains=request.POST['titulua']) & Q(ensaioa__protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(ensaioa__hasieraData__icontains=request.POST['hasieraData']) & Q(ensaioa__egoera__icontains=request.POST['egoera'])).values('ensaioa')#Q(ensaioa=emaitza))
+                #Medicina arlokoa bada, bakarrik bere azpizerbitzuko ensaioak ikusi ahalko ditu
+                erabiltzaile_mota = ErabiltzaileProfila.objects.filter(erabiltzailea=request.user)[0]
+                
+                if erabiltzaile_mota.zerbitzua == 'Medicina':
+
+                    #Bilaketak egiteko flag hauek erabiliko ditugu, jakiteko erbailtzaileak zein aukera hautatu dituen bilaketarako
+                    if(request.POST['hasieraData']!=''):
+                        flagNoiztik = True
+
+                    if(request.POST['bukaeraData']!=''):
+                        flagNoizarte = True
+
+                    if (flagNoiztik and flagNoizarte):
+                        bilaketa_emaitzak = Ensaioa.objects.filter(Q(pazientea_ensaioan__pazientea=pazientea) & Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua=erabiltzaile_mota.azpizerbitzua) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__gte=request.POST['hasieraData']) & Q(bukaeraData_lte=request.POST['bukaeraData']) & Q(egoera='irekita'))# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+                        zenbat_ensaio = Ensaioa.objects.filter(Q(pazientea_ensaioan__pazientea=pazientea) & Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua=erabiltzaile_mota.azpizerbitzua) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__gte=request.POST['hasieraData']) & Q(bukaeraData_lte=request.POST['bukaeraData']) & Q(egoera='irekita')).count()# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+
+
+                    if (not flagNoiztik and flagNoizarte):
+                        bilaketa_emaitzak = Ensaioa.objects.filter(Q(pazientea_ensaioan__pazientea=pazientea) & Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua=erabiltzaile_mota.azpizerbitzua) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(bukaeraData_lte=request.POST['bukaeraData']) & Q(egoera='irekita'))# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+                        zenbat_ensaio = Ensaioa.objects.filter(Q(pazientea_ensaioan__pazientea=pazientea) & Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua=erabiltzaile_mota.azpizerbitzua) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(bukaeraData_lte=request.POST['bukaeraData']) & Q(egoera='irekita')).count()# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+
                     
+                    if (flagNoiztik and not flagNoizarte):
+                        bilaketa_emaitzak = Ensaioa.objects.filter(Q(pazientea_ensaioan__pazientea=pazientea) & Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua=erabiltzaile_mota.azpizerbitzua) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__gte=request.POST['hasieraData']) & Q(egoera='irekita'))# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+                        zenbat_ensaio = Ensaioa.objects.filter(Q(pazientea_ensaioan__pazientea=pazientea) & Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua=erabiltzaile_mota.azpizerbitzua) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__gte=request.POST['hasieraData']) & Q(egoera='irekita')).count()# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+
+                    
+                    if (not flagNoiztik and not flagNoizarte):
+                        bilaketa_emaitzak = Ensaioa.objects.filter(Q(pazientea_ensaioan__pazientea=pazientea) & Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua=erabiltzaile_mota.azpizerbitzua) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(egoera='irekita'))# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+                        zenbat_ensaio = Ensaioa.objects.filter(Q(pazientea_ensaioan__pazientea=pazientea) & Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua=erabiltzaile_mota.azpizerbitzua) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(egoera='irekita')).count()# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+
+
+
+
+
+                    #bilaketa_emaitzak = Ensaioa.objects.filter(Q(pazientea_ensaioan__pazientea=pazientea) & Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua=erabiltzaile_mota.azpizerbitzua) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__icontains=request.POST['hasieraData']) & Q(egoera='irekita'))# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+                
+                else:
+
+                    #Bilaketak egiteko flag hauek erabiliko ditugu, jakiteko erbailtzaileak zein aukera hautatu dituen bilaketarako
+                    if(request.POST['hasieraData']!=''):
+                        flagNoiztik = True
+
+                    if(request.POST['bukaeraData']!=''):
+                        flagNoizarte = True
+
+                    if (flagNoiztik and flagNoizarte):
+                        bilaketa_emaitzak = Ensaioa.objects.filter(Q(pazientea_ensaioan__pazientea=pazientea) & Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__gte=request.POST['hasieraData']) & Q(bukaeraData_lte=request.POST['bukaeraData']) & Q(egoera='irekita'))# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+                        zenbat_ensaio = Ensaioa.objects.filter(Q(pazientea_ensaioan__pazientea=pazientea) & Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__gte=request.POST['hasieraData']) & Q(bukaeraData_lte=request.POST['bukaeraData']) & Q(egoera='irekita')).count()# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+
+
+                    if (not flagNoiztik and flagNoizarte):
+                        bilaketa_emaitzak = Ensaioa.objects.filter(Q(pazientea_ensaioan__pazientea=pazientea) & Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(bukaeraData_lte=request.POST['bukaeraData']) & Q(egoera='irekita'))# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+                        zenbat_ensaio = Ensaioa.objects.filter(Q(pazientea_ensaioan__pazientea=pazientea) & Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(bukaeraData_lte=request.POST['bukaeraData']) & Q(egoera='irekita')).count()# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+
+                    
+                    if (flagNoiztik and not flagNoizarte):
+                        bilaketa_emaitzak = Ensaioa.objects.filter(Q(pazientea_ensaioan__pazientea=pazientea) & Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__gte=request.POST['hasieraData']) & Q(egoera='irekita'))# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+                        zenbat_ensaio = Ensaioa.objects.filter(Q(pazientea_ensaioan__pazientea=pazientea) & Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__gte=request.POST['hasieraData']) & Q(egoera='irekita')).count()# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+
+                    
+                    if (not flagNoiztik and not flagNoizarte):
+                        bilaketa_emaitzak = Ensaioa.objects.filter(Q(pazientea_ensaioan__pazientea=pazientea) & Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(egoera='irekita'))# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+                        zenbat_ensaio = Ensaioa.objects.filter(Q(pazientea_ensaioan__pazientea=pazientea) & Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(egoera='irekita')).count()# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+
+
+
+
+
+
+
+
+
+
+
+
+                    #bilaketa_emaitzak = Ensaioa.objects.filter(Q(pazientea_ensaioan__pazientea=pazientea) & Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__icontains=request.POST['hasieraData']) & Q(egoera='irekita'))# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+                        #bilaketa_emaitzak_3 = PazienteEnsaio.objects.filter(Q(pazientea=pazientea) & Q(ensaioa=bilaketa_emaitzak_2)).values('ensaioa')#Q(ensaioa__ikertzailea__icontains=request.POST['ikertzailea']) & Q(ensaioa__monitorea__icontains=request.POST['monitorea']) & Q(ensaioa__estudioMota__icontains=request.POST['estudioMota']) & Q(ensaioa__promotorea__icontains=request.POST['promotorea']) & Q(ensaioa__zerbitzua__icontains=request.POST['zerbitzua']) & Q(ensaioa__titulua__icontains=request.POST['titulua']) & Q(ensaioa__protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(ensaioa__hasieraData__icontains=request.POST['hasieraData']) & Q(ensaioa__egoera__icontains=request.POST['egoera'])).values('ensaioa')#Q(ensaioa=emaitza))
+                    
+                    #zenbat_ensaio = Ensaioa.objects.filter(Q(pazientea_ensaioan__pazientea=pazientea) & Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__icontains=request.POST['hasieraData']) & Q(egoera='irekita')).count()# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+
                 ondo = bilaketa_emaitzak
 
 
             else:
-                bilaketa_emaitzak = Ensaioa.objects.filter(Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__icontains=request.POST['hasieraData']) & Q(egoera='irekita'))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+                #Medicina arlokoa bada, bakarrik bere azpizerbitzuko ensaioak ikusi ahalko ditu
+                erabiltzaile_mota = ErabiltzaileProfila.objects.filter(erabiltzailea=request.user)[0]
+                if erabiltzaile_mota.zerbitzua == 'Medicina':
 
+
+                    #Bilaketak egiteko flag hauek erabiliko ditugu, jakiteko erbailtzaileak zein aukera hautatu dituen bilaketarako
+                    if(request.POST['hasieraData']!=''):
+                        flagNoiztik = True
+
+                    if(request.POST['bukaeraData']!=''):
+                        flagNoizarte = True
+
+                    if (flagNoiztik and flagNoizarte):
+                        bilaketa_emaitzak = Ensaioa.objects.filter(Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua=erabiltzaile_mota.azpizerbitzua) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__gte=request.POST['hasieraData']) & Q(bukaeraData_lte=request.POST['bukaeraData']) & Q(egoera='irekita'))# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+                        zenbat_ensaio = Ensaioa.objects.filter(Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua=erabiltzaile_mota.azpizerbitzua) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__gte=request.POST['hasieraData']) & Q(bukaeraData_lte=request.POST['bukaeraData']) & Q(egoera='irekita')).count()# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+
+
+                    if (not flagNoiztik and flagNoizarte):
+                        bilaketa_emaitzak = Ensaioa.objects.filter(Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua=erabiltzaile_mota.azpizerbitzua) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(bukaeraData_lte=request.POST['bukaeraData']) & Q(egoera='irekita'))# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+                        zenbat_ensaio = Ensaioa.objects.filter(Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua=erabiltzaile_mota.azpizerbitzua) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(bukaeraData_lte=request.POST['bukaeraData']) & Q(egoera='irekita')).count()# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+
+                    
+                    if (flagNoiztik and not flagNoizarte):
+                        bilaketa_emaitzak = Ensaioa.objects.filter(Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua=erabiltzaile_mota.azpizerbitzua) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__gte=request.POST['hasieraData']) & Q(egoera='irekita'))# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+                        zenbat_ensaio = Ensaioa.objects.filter(Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua=erabiltzaile_mota.azpizerbitzua) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__gte=request.POST['hasieraData']) & Q(egoera='irekita')).count()# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+
+                    
+                    if (not flagNoiztik and not flagNoizarte):
+                        bilaketa_emaitzak = Ensaioa.objects.filter(Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua=erabiltzaile_mota.azpizerbitzua) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(egoera='irekita'))# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+                        zenbat_ensaio = Ensaioa.objects.filter(Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua=erabiltzaile_mota.azpizerbitzua) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(egoera='irekita')).count()# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+
+
+
+
+                    #bilaketa_emaitzak = Ensaioa.objects.filter(Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua=erabiltzaile_mota.azpizerbitzua) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__icontains=request.POST['hasieraData']) & Q(egoera='irekita'))#  & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor'])
+
+                else:
+
+
+                    #Bilaketak egiteko flag hauek erabiliko ditugu, jakiteko erbailtzaileak zein aukera hautatu dituen bilaketarako
+                    if(request.POST['hasieraData']!=''):
+                        flagNoiztik = True
+
+                    if(request.POST['bukaeraData']!=''):
+                        flagNoizarte = True
+
+                    if (flagNoiztik and flagNoizarte):
+                        bilaketa_emaitzak = Ensaioa.objects.filter(Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__gte=request.POST['hasieraData']) & Q(bukaeraData_lte=request.POST['bukaeraData']) & Q(egoera='irekita'))# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+                        zenbat_ensaio = Ensaioa.objects.filter(Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__gte=request.POST['hasieraData']) & Q(bukaeraData_lte=request.POST['bukaeraData']) & Q(egoera='irekita')).count()# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+
+
+                    if (not flagNoiztik and flagNoizarte):
+                        bilaketa_emaitzak = Ensaioa.objects.filter(Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(bukaeraData_lte=request.POST['bukaeraData']) & Q(egoera='irekita'))# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+                        zenbat_ensaio = Ensaioa.objects.filter(Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(bukaeraData_lte=request.POST['bukaeraData']) & Q(egoera='irekita')).count()# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+
+                    
+                    if (flagNoiztik and not flagNoizarte):
+                        bilaketa_emaitzak = Ensaioa.objects.filter(Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__gte=request.POST['hasieraData']) & Q(egoera='irekita'))# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+                        zenbat_ensaio = Ensaioa.objects.filter(Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__gte=request.POST['hasieraData']) & Q(egoera='irekita')).count()# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+
+                    
+                    if (not flagNoiztik and not flagNoizarte):
+                        bilaketa_emaitzak = Ensaioa.objects.filter(Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(egoera='irekita'))# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+                        zenbat_ensaio = Ensaioa.objects.filter(Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(egoera='irekita')).count()# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+
+
+#                    bilaketa_emaitzak = Ensaioa.objects.filter(Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__icontains=request.POST['hasieraData']) & Q(egoera='irekita'))#  & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor'])
+#                    zenbat_ensaio = Ensaioa.objects.filter(Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__icontains=request.POST['hasieraData']) & Q(egoera='irekita')).count()
 
   
         else:
@@ -251,6 +406,8 @@ def ensaioak_bilatu(request):
 
 
 
+
+
     #Jakiteko zein motako erabiltzailea den
     erabiltzaile_mota = ErabiltzaileProfila.objects.filter(erabiltzailea=request.user)[0].zerbitzua
     #aldagai hau erabiliko da html-an konprobazioa egiteko
@@ -264,7 +421,7 @@ def ensaioak_bilatu(request):
     # Render the template depending on the context.
     return render(request,
             'farmaciapp/ensaioak_bilatu.html',
-            {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'ondo':ondo, 'pazientea_id': pazientea_id, 'pazientea': pazientea, 'bilaketa_emaitzak': bilaketa_emaitzak, 'ensaio_bilaketa_form': ensaio_bilaketa_form, 'ensaio_bilaketa_form2': ensaio_bilaketa_form2, 'pazientea_duten_ensaioak': pazientea_duten_ensaioak} )
+            {'zenbatEnsaio':zenbat_ensaio, 'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'ondo':ondo, 'pazientea_id': pazientea_id, 'pazientea': pazientea, 'bilaketa_emaitzak': bilaketa_emaitzak, 'ensaio_bilaketa_form': ensaio_bilaketa_form, 'ensaio_bilaketa_form2': ensaio_bilaketa_form2, 'pazientea_duten_ensaioak': pazientea_duten_ensaioak} )
     #TODO
 
 
@@ -294,8 +451,12 @@ def ensaioa_sortu(request):
             # Save the user's form data to the database.
             ensaioa = ensaio_form.save(commit=False)
             ensaioa.egoera = 'irekita'
+            ensaioa_titulua = request.POST['protokoloZenbakia']
+
+            
+
+
             ensaioa.save()
-            ensaioa_titulua = request.POST['titulua']
 
             # Now sort out the UserProfile instance.
             # Since we need to set the user attribute ourselves, we set commit=False.
@@ -345,7 +506,7 @@ def ensaioa_sortu(request):
 
 
 
-def ensaioa_info(request, ensaioa_titulua):
+def ensaioa_info(request, ensaioa_protokolo_zenb):
     context_dict = {}
     context_dict['egoera'] = None
     context_dict['hasieraData'] = None
@@ -355,6 +516,10 @@ def ensaioa_info(request, ensaioa_titulua):
     context_dict['zerbitzua'] = None
     context_dict['promotorea'] = None
     context_dict['estudioMota'] = None
+    context_dict['monitoreaTel'] = None
+    context_dict['monitoreaFax'] = None
+    context_dict['monitoreaMugikor'] = None
+    context_dict['monitoreaEmail'] = None
     context_dict['monitorea'] = None
     context_dict['ikertzailea'] = None
     context_dict['komentarioak'] = None
@@ -371,7 +536,7 @@ def ensaioa_info(request, ensaioa_titulua):
     context_dict['admin'] = 'admin'
       
     try:
-        ensaioa = Ensaioa.objects.get(titulua=ensaioa_titulua)
+        ensaioa = Ensaioa.objects.get(protokoloZenbakia=ensaioa_protokolo_zenb)
         context_dict['egoera'] = ensaioa.egoera
         context_dict['hasieraData'] = ensaioa.hasieraData
         context_dict['bukaeraData'] = ensaioa.bukaeraData
@@ -380,12 +545,16 @@ def ensaioa_info(request, ensaioa_titulua):
         context_dict['zerbitzua'] = ensaioa.zerbitzua
         context_dict['promotorea'] = ensaioa.promotorea
         context_dict['estudioMota'] = ensaioa.estudioMota
+        context_dict['monitoreaTel'] = ensaioa.monitoreaTel
+        context_dict['monitoreaFax'] = ensaioa.monitoreaFax
+        context_dict['monitoreaMugikor'] = ensaioa.monitoreaMugikor
+        context_dict['monitoreaEmail'] = ensaioa.monitoreaEmail
         context_dict['monitorea'] = ensaioa.monitorea
         context_dict['ikertzailea'] = ensaioa.ikertzailea
         context_dict['komentarioak'] = ensaioa.komentarioak
 
         #zeintzuk medikamentu dituen agertuko da lehenik
-        ensaioa = Ensaioa.objects.get(titulua=ensaioa_titulua)
+        ensaioa = Ensaioa.objects.get(protokoloZenbakia=ensaioa_protokolo_zenb)
         medikamentuen_lista = MedikamentuEnsaio.objects.filter(Q(ensaioa=ensaioa))#.values('medikamentua').distinct()
         context_dict['medikamentuak'] = medikamentuen_lista
 
@@ -402,7 +571,7 @@ def ensaioa_info(request, ensaioa_titulua):
 
 
 @login_required
-def dispentsazioak_aztertu(request, ensaioa_titulua):
+def dispentsazioak_aztertu(request, ensaioa_protokolo_zenb):
    #Ensaioaren dispentsazioak aztertuko dira
 
     #TODO
@@ -435,7 +604,7 @@ def dispentsazioak_aztertu(request, ensaioa_titulua):
 
 
             #Lehenengo, ensaio horretan dauden dispentsazio guztiak lortzen dira, gero, pazientearekiko filtratzeko
-            dispentsazioak_ensaioan = Dispentsazioa.objects.filter(Q(ensaioa__titulua=ensaioa_titulua))
+            dispentsazioak_ensaioan = Dispentsazioa.objects.filter(Q(ensaioa__protokoloZenbakia=ensaioa_protokolo_zenb))
 
             #Orain, espezifikatutako informazioa betetzen duten dispenstazioan eskuratuko dira
                 
@@ -462,30 +631,30 @@ def dispentsazioak_aztertu(request, ensaioa_titulua):
             #Paziente konkretu bat espezifikatu baldin bada
             if paziente_id != -1:
                 if (flagNoiztik and flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']) and Q(paziente__ident=pazientea_id)).values('paziente', 'ident').distinct()
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']) and Q(paziente__ident=paziente_id)).distinct()
                     flag = 'if1'
                 if (not flagNoiztik and flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']) and Q(paziente__ident=pazientea_id)).values('paziente', 'ident').distinct()
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']) and Q(paziente__ident=paziente_id)).distinct()
                     flag = 'if2'
                 if (flagNoiztik and not flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(paziente__ident=pazientea_id)).values('paziente', 'ident').distinct()
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(paziente__ident=paziente_id)).distinct()
                     flag = 'if3'
                 if (not flagNoiztik and not flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(paziente__ident=pazientea_id)).values('paziente', 'ident').distinct()
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(paziente__ident=paziente_id)).distinct()
                     flag = pazienteaEnsaioan
             
             else:
                 if (flagNoiztik and flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte'])).values('paziente', 'ident').distinct()
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte'])).distinct()
                     flag = 'if1'
                 if (not flagNoiztik and flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte'])).values('paziente', 'ident').distinct()
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte'])).distinct()
                     flag = 'if2'
                 if (flagNoiztik and not flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik'])).values('paziente', 'ident').distinct()
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik'])).distinct()
                     flag = 'if3'
                 if (not flagNoiztik and not flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan)).values('paziente', 'ident').distinct()
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan)).distinct()#.values('paziente', 'ident')
                     flag = pazienteaEnsaioan
 
 
@@ -521,15 +690,16 @@ def dispentsazioak_aztertu(request, ensaioa_titulua):
     #Honek eramango gaitu medikamentuen bilaketa emaitza erakutsiko duen orrialdera
     return render(request,
             'farmaciapp/dispentsazioak_aztertu.html',
-            {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'farmazia':farmazia, 'mota':erabiltzaile_mota, 'pazienteidreal':pazienteidreal, 'noiztik': noiztik, 'noizarte': noizarte, 'flag': flag, 'paziente_id': paziente_id, 'pazientea': pazienteaEnsaioan, 'ensaioa': ensaioa_titulua, 'bilaketa_emaitzak': bilaketa_emaitzak, 'dispentsazio_form': dispentsazio_form, 'ensaioa_titulua':ensaioa_titulua} )
+            {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'farmazia':farmazia, 'mota':erabiltzaile_mota, 'pazienteidreal':pazienteidreal, 'noiztik': noiztik, 'noizarte': noizarte, 'flag': flag, 'paziente_id': paziente_id, 'pazientea': pazienteaEnsaioan, 'ensaioa': ensaioa_protokolo_zenb, 'bilaketa_emaitzak': bilaketa_emaitzak, 'dispentsazio_form': dispentsazio_form, 'ensaioa_titulua':ensaioa_protokolo_zenb} )
     #TODO
 
 
 @login_required
-def dispentsazioa_info(request, ensaioa_titulua, dispentsazioa_ident):
+def dispentsazioa_info(request, ensaioa_protokolo_zenb, dispentsazioa_ident):
     #TODO
     #Hemen dispentsazioaren informazioa ikusi ahalko da
     context_dict = {}
+    ensaioa_titulua = Ensaioa.objects.get(protokoloZenbakia=ensaioa_protokolo_zenb).titulua
     context_dict['dispentsazioa'] = dispentsazioa_ident
     context_dict['ensaioa'] = ensaioa_titulua
     context_dict['dispentsatzailea'] = None
@@ -544,6 +714,8 @@ def dispentsazioa_info(request, ensaioa_titulua, dispentsazioa_ident):
 
     #Dispentsazio horren errezetaren informazioa lortu beharko litzateke
     context_dict['gainontzekoEremuak'] = None
+
+    context_dict['errezetaIzena'] = None
     
     
       
@@ -563,6 +735,8 @@ def dispentsazioa_info(request, ensaioa_titulua, dispentsazioa_ident):
        
         errezeta = EnsaioErrezeta.objects.get(ident=Dispentsazioa.objects.get(ident=dispentsazioa_ident).ensaioerrezeta)
         context_dict['gainontzekoEremuak'] = errezeta.gainontzekoEremuak
+
+        context_dict['errezetaIzena'] = errezeta.errezetaIzena
         
 
     except PazienteDispentsazio.DoesNotExist:
@@ -580,7 +754,7 @@ def dispentsazioa_info(request, ensaioa_titulua, dispentsazioa_ident):
 
 
 @login_required
-def errezeta_sortu_ensaiotik(request, ensaioa_titulua):
+def errezeta_sortu_ensaiotik(request, ensaioa_protokolo_zenb):
     #TODO
     # A boolean value for telling the template whether the registration was successful.
     # Set to False initially. Code changes value to True when registration succeeds.
@@ -596,7 +770,7 @@ def errezeta_sortu_ensaiotik(request, ensaioa_titulua):
         if errezeta_form.is_valid():
             # Save the user's form data to the database.
             #Bilatu behar da ea ensaio horrentzako errezeta hori sortuta dagoen, berdina ez sortzeko
-            ensaioa = Ensaioa.objects.get(titulua=ensaioa_titulua)
+            ensaioa = Ensaioa.objects.get(protokoloZenbakia=ensaioa_protokolo_zenb)
             pazientea = Pazientea.objects.get(ident=request.POST['pazientea'])
             try:
                 ensaioerrezeta = EnsaioErrezeta.objects.get(ensaioa=ensaioa, pazientea=pazientea, preskripzioData=request.POST['preskripzioData'], hurrengoPreskripzioData=request.POST['hurrengoPreskripzioData'])
@@ -606,6 +780,7 @@ def errezeta_sortu_ensaiotik(request, ensaioa_titulua):
                 errezeta.ensaioa = ensaioa
                 errezeta.pendiente = 'Pendiente'
                 errezeta.sortzailea = request.user
+                errezeta.errezetaIzena = ensaioa.protokoloZenbakia + "-" + pazientea.idensaioan
                 #errezeta.save()
 
               
@@ -647,13 +822,13 @@ def errezeta_sortu_ensaiotik(request, ensaioa_titulua):
 
     return render(request,
             'farmaciapp/errezeta_ensaiotik.html',
-            {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'sortuta': sortuta, 'mezua':mezua, 'errezeta_form': errezeta_form, 'sortuta': sortuta, 'titulua':ensaioa_titulua})#, 'mota':erabiltzaile_mota, 'farmazia':farmazia} )
+            {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'sortuta': sortuta, 'mezua':mezua, 'errezeta_form': errezeta_form, 'sortuta': sortuta, 'titulua':ensaioa_protokolo_zenb})#, 'mota':erabiltzaile_mota, 'farmazia':farmazia} )
 
 
 
 
 @login_required
-def errezeta_sortu_ensaiotik_botoia(request, ensaioa_titulua):
+def errezeta_sortu_ensaiotik_botoia(request, ensaioa_protokolo_zenb):
 
     errezeta_form = ErrezetaBerriEnsaiotikFormularioa()
     #Ensaioa sortzeko formularioaren orrialdea erakutsiko da
@@ -672,13 +847,13 @@ def errezeta_sortu_ensaiotik_botoia(request, ensaioa_titulua):
 
 
 
-    return render(request, 'farmaciapp/errezeta_ensaiotik.html', {'pendienteak':errezeta_pendienteak.count, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'admin':admin, 'eratorpena':eratorpena, 'errezeta_form':errezeta_form, 'titulua':ensaioa_titulua})
+    return render(request, 'farmaciapp/errezeta_ensaiotik.html', {'pendienteak':errezeta_pendienteak.count, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'admin':admin, 'eratorpena':eratorpena, 'errezeta_form':errezeta_form, 'titulua':ensaioa_protokolo_zenb})
 
 
 @login_required
-def medikamentua_ezabatu(request, medikamentua_ident):
+def medikamentua_ezabatu(request, medikamentua_identKodetua):
     #Medikamentua ezabatuko da bai Stock-etik eta bai erlazionatuta dagoen ensaio eta errezetetatik
-    medikamentua = Medikamentua.objects.get(ident=medikamentua_ident)
+    medikamentua = Medikamentua.objects.get(identKodetua=medikamentua_identKodetua)
     medikamentua.delete()
 
     #Jakiteko zein motako erabiltzailea den
@@ -705,13 +880,13 @@ def medikamentua_ezabatu(request, medikamentua_ident):
 
 
 @login_required
-def medikamentua_kendu_ensaiotik(request, ensaioa_titulua, medikamentua_ident):
+def medikamentua_kendu_ensaiotik(request, ensaioa_protokolo_zenb, medikamentua_identKodetua):
     #Medikamentua kenduko da ensaiotik, baina Stock-ean mantenduko da
-    medikamentua = MedikamentuEnsaio.objects.get(medikamentua=medikamentua_ident)
+    medikamentua = MedikamentuEnsaio.objects.get(medikamentua__identKodetua=medikamentua_identKodetua)
     medikamentua.delete()
 
     #zeintzuk medikamentu dituen agertuko da lehenik
-    ensaioa = Ensaioa.objects.get(titulua=ensaioa_titulua)
+    ensaioa = Ensaioa.objects.get(protokoloZenbakia=ensaioa_protokolo_zenb)
     medikamentuen_lista = MedikamentuEnsaio.objects.filter(Q(ensaioa=ensaioa))#.values('medikamentua').distinct()
     
     #Jakiteko zein motako erabiltzailea den
@@ -727,12 +902,84 @@ def medikamentua_kendu_ensaiotik(request, ensaioa_titulua, medikamentua_ident):
 
 
     #Ensaioari medikamentuak gehitzeaz arduratuko den orrialdera eramango gaitu
-    return render(request, 'farmaciapp/medikamentuak_gehitu_ensaioari.html', {'pendienteak':errezeta_pendienteak.count, 'mezua':mezua, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'medikamentua_form':medikamentua_form, 'medikamentuen_lista': medikamentuen_lista, 'titulua':ensaioa_titulua})
+    return render(request, 'farmaciapp/medikamentuak_gehitu_ensaioari.html', {'pendienteak':errezeta_pendienteak.count, 'mezua':mezua, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'medikamentua_form':medikamentua_form, 'medikamentuen_lista': medikamentuen_lista, 'titulua':ensaioa_protokolo_zenb})
+
+@login_required
+def ensaioaren_medikamentu_dispentsazio_info(request, ensaioa_protokolo_zenb, medikamentua_identKodetua):
+
+    #medikamentu horren dispentsazioen informazioa agertuko da
+    
+    #ensaio horren gaineko eta medikamentu horren gaineko dispentsazioak lortzen dira
+    medikamentuaren_ensaioaren_dispentsazioak = Dispentsazioa.objects.filter(Q(ensaioa__protokoloZenbakia=ensaioa_protokolo_zenb) & Q(dispentsazioa_pazientearekiko__medikamentua=medikamentua_identKodetua))
+
+    #eman diren dosi totalak kalkulatuko dira
+    dosiak_dict = PazienteDispentsazio.objects.filter(Q(dispentsazioa__ensaioa__protokoloZenbakia=ensaioa_protokolo_zenb) & Q(medikamentua__identKodetua=medikamentua_identKodetua)).aggregate(Sum('dosia'))
+    dosiak = dosiak_dict['dosia__sum']
+
+    #zenbat dauden kalkulatuko da
+    medikamentua = Medikamentua.objects.get(identKodetua=medikamentua_identKodetua)
+
+    unitate_totalak = medikamentua.unitateak_historikoa
+
+
+    
+
+    #zein pazienteri egin zaien dispentsazioak gordeko da
+    #pazienteak = Pazientea.objects.filter(Q(pazientea_dispentsazioan__dispentsazioa__ensaioa__protokoloZenbakia=ensaioa_protokolo_zenb) & Q(pazientea_dispentsazioan__medikamentua__identKodetua=medikamentua_identKodetua)).distinct()
+
+    pazienteak = PazienteDispentsazio.objects.filter(Q(dispentsazioa__ensaioa__protokoloZenbakia=ensaioa_protokolo_zenb) & Q(medikamentua__identKodetua=medikamentua_identKodetua))
+
+
+
+
+
+    #Jakiteko zein motako erabiltzailea den
+    erabiltzaile_mota = ErabiltzaileProfila.objects.filter(erabiltzailea=request.user)[0].zerbitzua
+    #aldagai hau erabiliko da html-an konprobazioa egiteko
+    farmazia = 'Farmazia'
+    admin = 'admin'
+
+    ensaioa_titulua = Ensaioa.objects.get(protokoloZenbakia=ensaioa_protokolo_zenb)
+
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+    medikamentua = Medikamentua.objects.get(identKodetua=medikamentua_identKodetua)
+
+
+
+    return render(request, 'farmaciapp/ensaioaren_medikamentu_dispentsazio_info.html', {'pazienteak':pazienteak, 'dosiak':dosiak, 'unitate_totalak':unitate_totalak, 'medikamentua':medikamentua, 'titulua':ensaioa_titulua, 'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'bilaketa_emaitzak':medikamentuaren_ensaioaren_dispentsazioak})
+
+
+@login_required
+def ensaioaren_medikamentuak_aztertu(request, ensaioa_protokolo_zenb):
+
+    #Ensaioari esleituta dauden medikamentuen zerrenda pantailaratuko da
+    bilaketa_emaitzak = Medikamentua.objects.filter(Q(medikamentua_ensaioan__ensaioa__protokoloZenbakia=ensaioa_protokolo_zenb))
+
+    #Jakiteko zein motako erabiltzailea den
+    erabiltzaile_mota = ErabiltzaileProfila.objects.filter(erabiltzailea=request.user)[0].zerbitzua
+    #aldagai hau erabiliko da html-an konprobazioa egiteko
+    farmazia = 'Farmazia'
+    admin = 'admin'
+
+    ensaioa_titulua = Ensaioa.objects.get(protokoloZenbakia=ensaioa_protokolo_zenb)
+
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+
+    #Ensaioari medikamentuak gehitzeaz arduratuko den orrialdera eramango gaitu
+    return render(request, 'farmaciapp/ensaioaren_medikamentu_orria.html', {'protokoloZenbakia':ensaioa_protokolo_zenb, 'titulua':ensaioa_titulua, 'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'bilaketa_emaitzak':bilaketa_emaitzak})
+
+
+
+
 
 
 
 @login_required
-def medikamentuak_gehitu_ensaioari_botoia(request, ensaioa_titulua):
+def medikamentuak_gehitu_ensaioari_botoia(request, ensaioa_protokolo_zenb):
     #TODO
     mezua = ''
     medikamentua_form = MedikamentuBerriFormularioa()
@@ -749,13 +996,16 @@ def medikamentuak_gehitu_ensaioari_botoia(request, ensaioa_titulua):
                     #mezua = 'if2'
                     try:
                         #Medikamentua existitzen bada, informazioa eguneratuko zaio
-                        #mezua = 'try'
                         medikamentua_konprobatu = Medikamentua.objects.get(ident=request.POST['ident'])
                         zenbat_unitate = int(medikamentua_konprobatu.unitateak)
                         mezua = zenbat_unitate
                         zenbat_unitate = zenbat_unitate + int(request.POST['unitateak'])
                         mezua = zenbat_unitate
                         medikamentua_konprobatu.unitateak = zenbat_unitate
+
+                        #medikamentuak izan dituen unitateen historikoa eguneratzen da
+                        unitate_totalak = int(medikamentua_konprobatu.unitateak_historikoa) + int(request.POST['unitateak'])
+                        medikamentua_konprobatu.unitateak_historikoa = unitate_totalak
                         
                         #Orain konprobatzen da ea erabiltzaileak ordua espezifikatu duen edo ez
                         if request.POST['ordua'] != '' and request.POST['minutuak'] != '':
@@ -777,7 +1027,25 @@ def medikamentuak_gehitu_ensaioari_botoia(request, ensaioa_titulua):
                         # Save the user's form data to the database.
                         #errezeta_form.ensaioa = ensaioa_titulua
                         medikamentua = medikamentua_form.save(commit=False)
+#########
+                        #identKodetua zenbaki bat izango da, random bidez lortua, baina bakarra izango dena
+                        idkod = randint(0,sys.maxint)
+                        baliozkoa = False
+                        while not baliozkoa:
+                            try:
+                                medikamentua_existitzen_da = Medikamentua.objects.get(identKodetua=idkod)
+                                idkod = randint(0, sys.maxint)
+                            except:
+                                baliozkoa = True
 
+                        #behin aurkitu dela balio duen zenbaki bat, medikamentuari esleituko zaio zenbaki hori
+                        medikamentua.identKodetua = idkod
+
+                        #medikamentuak izan dituen unitateen historikoa eguneratzen da
+                        unitate_totalak = int(request.POST['unitateak'])
+                        medikamentua.unitateak_historikoa = unitate_totalak
+                        
+#########
                         #Orain konprobatzen da ea erabiltzaileak ordua espezifikatu duen edo ez
                         if request.POST['ordua'] != '' and request.POST['minutuak'] != '':
                             #Ordua espezifikatu badu
@@ -792,7 +1060,7 @@ def medikamentuak_gehitu_ensaioari_botoia(request, ensaioa_titulua):
                         medikamentua.save()
 
                         #Orain medikamentuEnsaio modeloaren instantzia bat sortu behar da, erlazioa egiteko
-                        ensaioa = Ensaioa.objects.get(titulua=ensaioa_titulua)
+                        ensaioa = Ensaioa.objects.get(protokoloZenbakia=ensaioa_protokolo_zenb)
                         medikamentuEnsaio = MedikamentuEnsaio(medikamentua=medikamentua, ensaioa=ensaioa)
                         medikamentuEnsaio.save()
                         mezua = 'Medikamentua gehitu da ensaioan'
@@ -818,10 +1086,11 @@ def medikamentuak_gehitu_ensaioari_botoia(request, ensaioa_titulua):
 
                 #Ensaio horrek medikamentu hau daukan konprobatzen da
                 try:
+                    ensaioa_titulua = Ensaioa.objects.get(protokoloZenbakia=ensaioa_protokolo_zenb).titulua
                     ensaioak_badu_medikamentua = MedikamentuEnsaio.objects.get(ensaioa=ensaioa_titulua, medikamentua=request.POST['ident'])
                 except:
                     #Ez badauka medikamentu hau, gehitu egin behar zaio
-                    ensaioa = Ensaioa.objects.get(titulua=ensaioa_titulua)
+                    ensaioa = Ensaioa.objects.get(protokoloZenbakia=ensaioa_protokolo_zenb)
                     
                     ensaioak_badu_medikamentua = MedikamentuEnsaio(ensaioa=ensaioa, medikamentua=medikamentua_konprobatu)
                     ensaioak_badu_medikamentua.save()
@@ -832,6 +1101,13 @@ def medikamentuak_gehitu_ensaioari_botoia(request, ensaioa_titulua):
                 zenbat_unitate = zenbat_unitate + int(request.POST['unitateak'])
                 
                 medikamentua_konprobatu.unitateak = zenbat_unitate
+
+                #medikamentuak izan dituen unitateen historikoa eguneratzen da
+                unitate_totalak = int(medikamentua_konprobatu.unitateak_historikoa) + int(request.POST['unitateak'])
+                medikamentua_konprobatu.unitateak_historikoa = unitate_totalak
+                        
+
+
                 #Orain konprobatzen da ea erabiltzaileak ordua espezifikatu duen edo ez
                 if request.POST['ordua'] != '' and request.POST['minutuak'] != '':
                     #Ordua espezifikatu badu
@@ -854,7 +1130,7 @@ def medikamentuak_gehitu_ensaioari_botoia(request, ensaioa_titulua):
         medikamentua_form = MedikamentuBerriFormularioa()
 
     #zeintzuk medikamentu dituen agertuko da lehenik
-    ensaioa = Ensaioa.objects.get(titulua=ensaioa_titulua)
+    ensaioa = Ensaioa.objects.get(protokoloZenbakia=ensaioa_protokolo_zenb)
     medikamentuen_lista = MedikamentuEnsaio.objects.filter(Q(ensaioa=ensaioa))#.values('medikamentua').distinct()
     
     #Jakiteko zein motako erabiltzailea den
@@ -867,7 +1143,7 @@ def medikamentuak_gehitu_ensaioari_botoia(request, ensaioa_titulua):
     errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
 
     #Ensaioari medikamentuak gehitzeaz arduratuko den orrialdera eramango gaitu
-    return render(request, 'farmaciapp/medikamentuak_gehitu_ensaioari.html', {'pendienteak':errezeta_pendienteak.count, 'mezua':mezua, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'medikamentua_form':medikamentua_form, 'medikamentuen_lista': medikamentuen_lista, 'titulua':ensaioa_titulua})
+    return render(request, 'farmaciapp/medikamentuak_gehitu_ensaioari.html', {'pendienteak':errezeta_pendienteak.count, 'mezua':mezua, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'medikamentua_form':medikamentua_form, 'medikamentuen_lista': medikamentuen_lista, 'titulua':ensaioa_protokolo_zenb})
 
 
 
@@ -908,6 +1184,9 @@ def ensaioen_historikoa_ikusi(request):
     #Hemen lortuko da bilaketa filtroetatik lotutako emaitza emaitza
     bilaketa_emaitzak = []
 
+    #jakiteko zenbat ensaio dauden
+    zenbat_ensaio = 0
+
     if request.method == 'POST':
 
         ensaio_bilaketa_form = EnsaioBilaketaFormularioa(data=request.POST)
@@ -926,11 +1205,13 @@ def ensaioen_historikoa_ikusi(request):
            
             if(pazientea!=None):
 
-                bilaketa_emaitzak = Ensaioa.objects.filter(Q(pazientea_ensaioan__pazientea=pazientea) & Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__icontains=request.POST['hasieraData']) & Q(egoera='itxita'))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
-                
+                bilaketa_emaitzak = Ensaioa.objects.filter(Q(pazientea_ensaioan__pazientea=pazientea) & Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__icontains=request.POST['hasieraData']) & Q(egoera='itxita') & Q(monitorea__icontains=request.POST['monitorea']))# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+                zenbat_ensaio = Ensaioa.objects.filter(Q(pazientea_ensaioan__pazientea=pazientea) & Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__icontains=request.POST['hasieraData']) & Q(egoera='itxita') & Q(monitorea__icontains=request.POST['monitorea'])).count()# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+
             else:
-                bilaketa_emaitzak = Ensaioa.objects.filter(Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(monitorea__icontains=request.POST['monitorea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__icontains=request.POST['hasieraData']) & Q(egoera='itxita'))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
-  
+                bilaketa_emaitzak = Ensaioa.objects.filter(Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__icontains=request.POST['hasieraData']) & Q(egoera='itxita')  & Q(monitorea__icontains=request.POST['monitorea']))# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+                zenbat_ensaio = Ensaioa.objects.filter(Q(ikertzailea__icontains=request.POST['ikertzailea']) & Q(estudioMota__icontains=request.POST['estudioMota']) & Q(promotorea__icontains=request.POST['promotorea']) & Q(zerbitzua__icontains=request.POST['zerbitzua']) & Q(titulua__icontains=request.POST['titulua']) & Q(protokoloZenbakia__icontains=request.POST['protokoloZenbakia']) & Q(hasieraData__icontains=request.POST['hasieraData']) & Q(egoera='itxita')  & Q(monitorea__icontains=request.POST['monitorea'])).count()# & Q(monitoreaEmail__icontains=request.POST['monitoreaEmail']) & Q(monitoreaFax__icontains=request.POST['monitoreaFax']) & Q(monitoreaTel__icontains=request.POST['monitoreaTel']) & Q(monitoreaMugikor__icontains=request.POST['monitoreaMugikor']))# & Q(bukaeraData__icontains=request.POST['bukaeraData']))#, PazienteEnsaio__isnull=False)
+
         else:
             bilaketa_emaitzak = []
 
@@ -957,18 +1238,18 @@ def ensaioen_historikoa_ikusi(request):
     # Render the template depending on the context.
     return render(request,
             'farmaciapp/ensaioen_historikoa.html',
-            {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'bilaketa_emaitzak': bilaketa_emaitzak, 'ensaio_bilaketa_form': ensaio_bilaketa_form, 'ensaio_bilaketa_form2': ensaio_bilaketa_form2} )
+            {'zenbatEnsaio':zenbat_ensaio, 'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'bilaketa_emaitzak': bilaketa_emaitzak, 'ensaio_bilaketa_form': ensaio_bilaketa_form, 'ensaio_bilaketa_form2': ensaio_bilaketa_form2} )
 
 
 
 @login_required
-def ensaioa_itxi(request, ensaioa_titulua):
+def ensaioa_itxi(request, ensaioa_protokolo_zenb):
     #Ensaioa itxiko da, bere itxiera data eguneko data jarriz
     
     #Eguneko data lortzen da
     eguneko_data = time.strftime("%Y-%m-%d")
 
-    ensaioa = Ensaioa.objects.get(titulua=ensaioa_titulua)
+    ensaioa = Ensaioa.objects.get(protokoloZenbakia=ensaioa_protokolo_zenb)
     ensaioa.bukaeraData = eguneko_data
     ensaioa.egoera = 'itxita'
     ensaioa.save()
@@ -993,7 +1274,7 @@ def ensaioa_itxi(request, ensaioa_titulua):
 
 
 @login_required
-def itxitako_ensaioa_info(request, ensaioa_titulua):
+def itxitako_ensaioa_info(request, ensaioa_protokolo_zenb):
     #Aukeratutako ensaioaren informazioa erakutsiko da
     context_dict = {}
     context_dict['egoera'] = None
@@ -1004,6 +1285,10 @@ def itxitako_ensaioa_info(request, ensaioa_titulua):
     context_dict['zerbitzua'] = None
     context_dict['promotorea'] = None
     context_dict['estudioMota'] = None
+    context_dict['monitoreaTel'] = None
+    context_dict['monitoreaFax'] = None
+    context_dict['monitoreaMugikor'] = None
+    context_dict['monitoreaEmail'] = None
     context_dict['monitorea'] = None
     context_dict['ikertzailea'] = None
     context_dict['komentarioak'] = None
@@ -1019,7 +1304,7 @@ def itxitako_ensaioa_info(request, ensaioa_titulua):
     context_dict['farmazia'] = farmazia
     context_dict['admin'] = 'admin'
     try:
-        ensaioa = Ensaioa.objects.get(titulua=ensaioa_titulua)
+        ensaioa = Ensaioa.objects.get(protokoloZenbakia=ensaioa_protokolo_zenb)
         context_dict['egoera'] = ensaioa.egoera
         context_dict['hasieraData'] = ensaioa.hasieraData
         context_dict['bukaeraData'] = ensaioa.bukaeraData
@@ -1028,13 +1313,17 @@ def itxitako_ensaioa_info(request, ensaioa_titulua):
         context_dict['zerbitzua'] = ensaioa.zerbitzua
         context_dict['promotorea'] = ensaioa.promotorea
         context_dict['estudioMota'] = ensaioa.estudioMota
+        context_dict['monitoreaTel'] = ensaioa.monitoreaTel
+        context_dict['monitoreaFax'] = ensaioa.monitoreaFax
+        context_dict['monitoreaMugikor'] = ensaioa.monitoreaMugikor
+        context_dict['monitoreaEmail'] = ensaioa.monitoreaEmail
         context_dict['monitorea'] = ensaioa.monitorea
         context_dict['ikertzailea'] = ensaioa.ikertzailea
         context_dict['komentarioak'] = ensaioa.komentarioak
 
         #zeintzuk medikamentu dituen agertuko da lehenik
-        ensaioa = Ensaioa.objects.get(titulua=ensaioa_titulua)
-        medikamentuen_lista = MedikamentuEnsaio.objects.filter(Q(ensaioa=ensaioa))#.values('medikamentua').distinct()
+        ensaioa = Ensaioa.objects.get(protokoloZenbakia=ensaioa_protokolo_zenb)
+        medikamentuen_lista = MedikamentuEnsaio.objects.filter(Q(ensaioa=ensaioa.titulua))#.values('medikamentua').distinct()
         context_dict['medikamentuak'] = medikamentuen_lista
 
     except Ensaioa.DoesNotExist:
@@ -1050,7 +1339,7 @@ def itxitako_ensaioa_info(request, ensaioa_titulua):
 
 
 @login_required
-def itxitako_ensaioen_dispentsazioak(request, ensaioa_titulua):
+def itxitako_ensaioen_dispentsazioak(request, ensaioa_protokolo_zenb):
     #Ensaioaren dispentsazioak aztertuko dira
 
     #TODO
@@ -1082,7 +1371,7 @@ def itxitako_ensaioen_dispentsazioak(request, ensaioa_titulua):
 
 
             #Lehenengo, ensaio horretan dauden dispentsazio guztiak lortzen dira, gero, pazientearekiko filtratzeko
-            dispentsazioak_ensaioan = Dispentsazioa.objects.filter(Q(ensaioa__titulua=ensaioa_titulua))
+            dispentsazioak_ensaioan = Dispentsazioa.objects.filter(Q(ensaioa__protokoloZenbakia=ensaioa_protokolo_zenb))
 
             #Orain, espezifikatutako informazioa betetzen duten dispenstazioan eskuratuko dira
                 
@@ -1109,30 +1398,30 @@ def itxitako_ensaioen_dispentsazioak(request, ensaioa_titulua):
             #Paziente konkretu bat espezifikatu baldin bada
             if paziente_id != -1:
                 if (flagNoiztik and flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']) and Q(paziente__ident=pazientea_id)).values('paziente', 'ident').distinct()
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']) and Q(paziente__ident=pazientea_id)).distinct()
                     flag = 'if1'
                 if (not flagNoiztik and flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']) and Q(paziente__ident=pazientea_id)).values('paziente', 'ident').distinct()
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']) and Q(paziente__ident=pazientea_id)).distinct()
                     flag = 'if2'
                 if (flagNoiztik and not flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(paziente__ident=pazientea_id)).values('paziente', 'ident').distinct()
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(paziente__ident=pazientea_id)).distinct()
                     flag = 'if3'
                 if (not flagNoiztik and not flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(paziente__ident=pazientea_id)).values('paziente', 'ident').distinct()
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(paziente__ident=pazientea_id)).distinct()
                     flag = pazienteaEnsaioan
             
             else:
                 if (flagNoiztik and flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte'])).values('paziente', 'ident').distinct()
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte'])).distinct()
                     flag = 'if1'
                 if (not flagNoiztik and flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte'])).values('paziente', 'ident').distinct()
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte'])).distinct()
                     flag = 'if2'
                 if (flagNoiztik and not flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik'])).values('paziente', 'ident').distinct()
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik'])).distinct()
                     flag = 'if3'
                 if (not flagNoiztik and not flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan)).values('paziente', 'ident').distinct()
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan)).distinct()
                     flag = pazienteaEnsaioan
 
 
@@ -1163,21 +1452,20 @@ def itxitako_ensaioen_dispentsazioak(request, ensaioa_titulua):
     errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
 
 
-
     # Render the template depending on the context.
     return render(request,
             'farmaciapp/itxitako_dispentsazioak_aztertu.html',
-            {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'farmazia':farmazia, 'mota':erabiltzaile_mota, 'pazienteidreal':pazienteidreal, 'noiztik': noiztik, 'noizarte': noizarte, 'flag': flag, 'paziente_id': paziente_id, 'pazientea': pazienteaEnsaioan, 'ensaioa': ensaioa_titulua, 'bilaketa_emaitzak': bilaketa_emaitzak, 'dispentsazio_form': dispentsazio_form, 'ensaioa_titulua':ensaioa_titulua} )
+            {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'farmazia':farmazia, 'mota':erabiltzaile_mota, 'pazienteidreal':pazienteidreal, 'noiztik': noiztik, 'noizarte': noizarte, 'flag': flag, 'paziente_id': paziente_id, 'pazientea': pazienteaEnsaioan, 'ensaioa': ensaioa_protokolo_zenb, 'bilaketa_emaitzak': bilaketa_emaitzak, 'dispentsazio_form': dispentsazio_form, 'ensaioa_titulua':ensaioa_protokolo_zenb} )
     #TODO
 
 
 @login_required
-def itxitako_dispentsazioaren_info(request, ensaioa_titulua, dispentsazioa_ident):
+def itxitako_dispentsazioaren_info(request, ensaioa_protokolo_zenb, dispentsazioa_ident):
     #TODO
     #Hemen itxita dagoen dispentsazioaren informazioa ikusi ahalko da
     context_dict = {}
     context_dict['dispentsazioa'] = dispentsazioa_ident
-    context_dict['ensaioa'] = ensaioa_titulua
+    context_dict['ensaioa'] = ensaioa_protokolo_zenb
     context_dict['bukaeraData'] = None
     context_dict['pazientea'] = None
     context_dict['mota'] = ErabiltzaileProfila.objects.filter(Q(erabiltzailea=request.user))[0].zerbitzua
@@ -1194,6 +1482,8 @@ def itxitako_dispentsazioaren_info(request, ensaioa_titulua, dispentsazioa_ident
 
     context_dict['pendienteak'] = errezeta_pendienteak.count
 
+    context_dict['errezetaIzena'] = None
+
 
     
       
@@ -1206,13 +1496,16 @@ def itxitako_dispentsazioaren_info(request, ensaioa_titulua, dispentsazioa_ident
         context_dict['medikamentuen_informazioa'] = paziente_dispentsazioak
     
         context_dict['dispentsazioa'] = dispentsazioa_ident
-        context_dict['ensaioa'] = ensaioa_titulua
+        context_dict['ensaioa'] = ensaioa_protokolo_zenb
         context_dict['bukaeraData'] = Dispentsazioa.objects.get(ident=dispentsazioa_ident).bukaeraData
         context_dict['pazientea'] = paziente_id
         context_dict['dispentsatzailea'] = Dispentsazioa.objects.get(ident=dispentsazioa_ident).dispentsatzailea
        
-        errezeta = EnsaioErrezeta.objects.get(ident=dispentsazioa_ident)
+        dispentsazioa = Dispentsazioa.objects.get(ident=dispentsazioa_ident)
+        errezeta = EnsaioErrezeta.objects.get(ident=dispentsazioa.ensaioerrezeta)
         context_dict['gainontzekoEremuak'] = errezeta.gainontzekoEremuak
+
+        context_dict['errezetaIzena'] = errezeta.errezetaIzena
         
        
 
@@ -1318,7 +1611,7 @@ def medikamentuak_bilatu(request):
 
 
 @login_required
-def medikamentua_info(request, medikamentua_ident):
+def medikamentua_info(request, medikamentua_identKodetua):
     #TODO
     #Medikamentuari dagokion informazioa agertuko da
     
@@ -1332,6 +1625,7 @@ def medikamentua_info(request, medikamentua_ident):
     context_dict['bidalketaOrdua'] = None
     context_dict['unitateak'] = None
     context_dict['ezabatuta'] = False
+    context_dict['identKodetua'] = None
 
     #Jakiteko zein motako erabiltzailea den
     erabiltzaile_mota = ErabiltzaileProfila.objects.filter(erabiltzailea=request.user)[0].zerbitzua
@@ -1344,7 +1638,7 @@ def medikamentua_info(request, medikamentua_ident):
     
       
     try:
-        medikamentua = Medikamentua.objects.get(ident=medikamentua_ident)
+        medikamentua = Medikamentua.objects.get(identKodetua=medikamentua_identKodetua)
         context_dict['ident'] = medikamentua.ident
         context_dict['kit'] = medikamentua.kit
         context_dict['lote'] = medikamentua.lote
@@ -1353,6 +1647,8 @@ def medikamentua_info(request, medikamentua_ident):
         context_dict['kaduzitatea'] = medikamentua.kaduzitatea
         context_dict['bidalketaOrdua'] = medikamentua.bidalketaOrdua
         context_dict['unitateak'] = medikamentua.unitateak
+        context_dict['identKodetua'] = medikamentua.identKodetua
+
         
 
     except Medikamentua.DoesNotExist:
@@ -1519,6 +1815,7 @@ def errezeta_info(request, errezeta_ident):
     context_dict['paziente_pisua'] = None
     context_dict['gainontzekoEremuak'] = None
     context_dict['ensaioaren_medikamentuak'] = None
+    context_dict['errezetaIzena'] = None
 
     #Pendiente dauden Errezetak aterako dira
     errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
@@ -1543,13 +1840,15 @@ def errezeta_info(request, errezeta_ident):
 
         #Jakiteko zein erabiltzailek sortu duen errezeta
         context_dict['errezetaren_sortzailea'] = errezeta.sortzailea
-        context_dict['errezeta_form'] = ErrezetaModifikatuFormularioa(initial={'ensaioa':errezeta.ensaioa, 'pazientea':errezeta.pazientea, 'pazientearen_pisua':pazientea.pisua, 'preskripzioData':errezeta.preskripzioData, 'hurrengoPreskripzioData':errezeta.hurrengoPreskripzioData, 'gainontzekoEremuak':errezeta.gainontzekoEremuak})
+        context_dict['errezeta_form'] = ErrezetaModifikatuFormularioa(initial={'ensaioa':errezeta.ensaioa.titulua, 'pazientea':errezeta.pazientea, 'pazientearen_pisua':pazientea.pisua, 'preskripzioData':errezeta.preskripzioData, 'hurrengoPreskripzioData':errezeta.hurrengoPreskripzioData, 'gainontzekoEremuak':errezeta.gainontzekoEremuak})
 
         #Ensaio horren medikamentuak bilatuko ditugu, gero aukeratzeko zeintzuk nahi diren dispentsatu
-        ensaioarenMedikamentuak = MedikamentuEnsaio.objects.filter(ensaioa=errezeta.ensaioa)
+        ensaioarenMedikamentuak = MedikamentuEnsaio.objects.filter(ensaioa=errezeta.ensaioa.titulua)
         context_dict['ensaioaren_medikamentuak'] = ensaioarenMedikamentuak
 
         context_dict['gainontzekoEremuak'] = errezeta.gainontzekoEremuak
+
+        context_dict['errezetaIzena'] = errezeta.errezetaIzena
 
     except EnsaioErrezeta.DoesNotExist:
         pass
@@ -1612,7 +1911,7 @@ def errezeta_onartu(request, errezeta_ident):
             ensaio_errezeta.gainontzekoEremuak = request.POST['gainontzekoEremuak']
             ensaio_errezeta.save()
 
-            ensaioa = Ensaioa.objects.get(titulua=request.POST['ensaioa'])
+            ensaioa = Ensaioa.objects.get(protokoloZenbakia=request.POST['ensaioa'])
         
             bukaeraData = parser.parse(request.POST['preskripzioData']).date()#datetime.datetime.strptime(request.POST['preskripzioData'], '%b %d, %Y')
             bukaeraData = bukaeraData.strftime('%Y-%m-%d')
@@ -1679,10 +1978,10 @@ def errezeta_onartu(request, errezeta_ident):
                 #Jakiteko zein erabiltzailek sortu duen errezeta
                 errezetaren_sortzailea = errezeta.sortzailea
                 
-                errezeta_form = ErrezetaModifikatuFormularioa(initial={'ensaioa':errezeta.ensaioa, 'pazientea':errezeta.pazientea, 'pazientearen_pisua':pazientea.pisua, 'preskripzioData':errezeta.preskripzioData, 'hurrengoPreskripzioData':errezeta.hurrengoPreskripzioData, 'gainontzekoEremuak':errezeta.gainontzekoEremuak})
+                errezeta_form = ErrezetaModifikatuFormularioa(initial={'ensaioa':errezeta.ensaioa.titulua, 'pazientea':errezeta.pazientea, 'pazientearen_pisua':pazientea.pisua, 'preskripzioData':errezeta.preskripzioData, 'hurrengoPreskripzioData':errezeta.hurrengoPreskripzioData, 'gainontzekoEremuak':errezeta.gainontzekoEremuak})
 
                 #Ensaio horren medikamentuak bilatuko ditugu, gero aukeratzeko zeintzuk nahi diren dispentsatu
-                ensaioarenMedikamentuak = MedikamentuEnsaio.objects.filter(ensaioa=errezeta.ensaioa)
+                ensaioarenMedikamentuak = MedikamentuEnsaio.objects.filter(ensaioa=errezeta.ensaioa.titulua)
                 ensaioaren_medikamentuak = ensaioarenMedikamentuak
 
                 gainontzekoEremuak = errezeta.gainontzekoEremuak
@@ -1760,7 +2059,7 @@ def errezeta_modifikatu(request, errezeta_ident):
             pazientea = Pazientea.objects.get(ident=request.POST['pazientea'])
             try:
                 #Balio berriekin moldatu nahi den errezeta existitzen den edo ez konprobatuko da
-                ensaioerrezeta = EnsaioErrezeta.objects.get(ensaioa=ensaioa,pazientea=pazientea, preskripzioData=request.POST['preskripzioData'], hurrengoPreskripzioData=request.POST['hurrengoPreskripzioData'])
+                ensaioerrezeta = EnsaioErrezeta.objects.get(ensaioa=ensaioa.titulua,pazientea=pazientea, preskripzioData=request.POST['preskripzioData'], hurrengoPreskripzioData=request.POST['hurrengoPreskripzioData'])
                 eguneraketa = False
             except:
                 #Aurreko datuekin geneukan errezeta hartu eta balioak aldatuko dizkiogu
@@ -1827,10 +2126,27 @@ def errezeta_modifikatu(request, errezeta_ident):
 
 
 @login_required
-def medikamentuaren_ensaioak_ikusi(request, medikamentua_ident):
+def medikamentuaren_ensaioak_ikusi(request, medikamentua_identKodetua):
     #TODO
     #Medikamentua zein ensaiorekin dagoen erlazionatuta ikusiko da
-    ensaio_lista = MedikamentuEnsaio.objects.filter(Q(medikamentua__ident=medikamentua_ident)).values('ensaioa').distinct()
+    ensaio_lista = MedikamentuEnsaio.objects.filter(Q(medikamentua__identKodetua=medikamentua_identKodetua)).values('ensaioa').distinct()
+    
+    ensaioak = Ensaioa.objects.filter(Q(titulua=ensaio_lista))
+
+    lista = []
+    i=1
+    for ensaioaren_titulua in ensaio_lista:
+   
+         ensaioa = Ensaioa.objects.get(titulua=ensaioaren_titulua.get('ensaioa', None))
+
+         lista.insert(i,ensaioa.protokoloZenbakia)
+         i = len(lista) 
+
+    ensaioak = lista
+
+    
+    medikamentua = Medikamentua.objects.get(identKodetua=medikamentua_identKodetua).ident
+
 
 
     #Jakiteko zein motako erabiltzailea den
@@ -1844,7 +2160,7 @@ def medikamentuaren_ensaioak_ikusi(request, medikamentua_ident):
 
 
     #Honek erakutsiko du medikamentu horren ensaioak agertzen diren orrialdea
-    return render(request, 'farmaciapp/medikamentuaren_ensaioak.html', {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'medikamentua':medikamentua_ident, 'ensaio_lista': ensaio_lista})
+    return render(request, 'farmaciapp/medikamentuaren_ensaioak.html', {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'medikamentua':medikamentua, 'ensaio_lista': ensaioak})
 
 
 
@@ -1918,7 +2234,7 @@ def paziente_berria_erregistratu_botoia(request):
 
 
     #Hori erakutsiko den orrialdera eramango gaitu
-    return render(request, 'farmaciapp/paziente_berria_sortu.html', {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'ensaioa':ensaioa, 'errezeta':errezeta, 'eratorpena':eratorpena, 'paziente_form':paziente_form, 'mota':erabiltzaile_mota, 'farmazia':farmazia})
+    return render(request, 'farmaciapp/paziente_berria_sortu.html', {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'titulua':ensaioa, 'errezeta':errezeta, 'eratorpena':eratorpena, 'paziente_form':paziente_form, 'mota':erabiltzaile_mota, 'farmazia':farmazia})
 
 @login_required
 def paziente_berria_erregistratu(request):
@@ -1943,8 +2259,8 @@ def paziente_berria_erregistratu(request):
 
 
         #Lehenik ikusi behar da zenbatgarren pazientea den ensaio horretan
-        zenbatgarrenPazientea = PazienteEnsaio.objects.filter(ensaioa__titulua=request.POST['ensaioa']).count()
-        zenbatgarrenPazientea = zenbatgarrenPazientea + 1
+        #zenbatgarrenPazientea = PazienteEnsaio.objects.filter(ensaioa__titulua=request.POST['ensaioa']).count()
+        #zenbatgarrenPazientea = zenbatgarrenPazientea + 1
 
         paziente_form = PazienteBerriFormularioa(data=request.POST)
         if paziente_form.is_valid():
@@ -1956,7 +2272,7 @@ def paziente_berria_erregistratu(request):
 
 
             except:
-                paziente_berria = Pazientea(idensaioan=zenbatgarrenPazientea, izena=request.POST['izena'], unitateKlinikoa=request.POST['unitateKlinikoa'], pisua=request.POST['pisua'])
+                paziente_berria = Pazientea(idensaioan=request.POST['idensaioan'], izena=request.POST['izena'], unitateKlinikoa=request.POST['unitateKlinikoa'], pisua=request.POST['pisua'])
                 paziente_berria.save()
                 mezua = 'Pazientea ondo sortu da'
                 erregistratuta = True
@@ -1987,6 +2303,8 @@ def erabiltzaile_menua(request):
 
     #Aplikazioan dauden erabiltzaile guztiak bilatuko dira
     bilaketa_emaitzak = ErabiltzaileProfila.objects.all()
+
+
 
     #Pendiente dauden Errezetak aterako dira
     errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
@@ -2065,7 +2383,7 @@ def erabiltzailea_eguneratu(request, erabiltzailea):
             #Horietako bat baldin bada, balioa aldatuko diogu
             #Bestela, mantendu egingo diogu
             motaBerria = request.POST['zerbitzua']
-            if motaBerria == 'admin' or motaBerria == 'Farmazia' or motaBerria == 'Medikua':
+            if motaBerria == 'admin' or motaBerria == 'Farmazia' or motaBerria == 'Medicina':
                 #Aldatu egingo diogu balioa
                 erabiltzailea_profila.zerbitzua = motaBerria
            
@@ -2099,13 +2417,16 @@ def erabiltzailea_eguneratu(request, erabiltzailea):
     return render(request, 'farmaciapp/erabiltzaile_info.html', {'pendienteak':errezeta_pendienteak.count, 'eguneratuta':eguneratuta, 'bilaketa_emaitzak':bilaketa_emaitzak, 'erabiltzailea':erabiltzailea, 'erabiltzaile_form':erabiltzaile_form, 'admin':admin, 'mota':erabiltzaile_mota})
 
 @login_required
-def medikamentuaren_unitateak_ezabatu(request, medikamentua_ident):
+def medikamentuaren_unitateak_ezabatu(request, medikamentua_identKodetua):
     #Medikamentuaren unitateak ezabatzen dira Stock-etik
 
     #Zenbat unitate geldituko diren unitateak kendu eta gero kalkulatzen da
-    medikamentua = Medikamentua.objects.get(ident=medikamentua_ident)
+    medikamentua = Medikamentua.objects.get(identKodetua=medikamentua_identKodetua)
     momentuko_stocka = int(medikamentua.unitateak)
     amaierako_stocka = momentuko_stocka - int(request.POST['medikamentuKantitatea'])
+
+    historiko_berria = int(medikamentua.unitateak_historikoa) - int(request.POST['medikamentuKantitatea'])
+    medikamentua.unitateak_historikoa = historiko_berria
 
     medikamentua.unitateak = amaierako_stocka
     medikamentua.save()
@@ -2178,6 +2499,57 @@ def erabiltzailea_gehitu(request):
     return render(request,
             'farmaciapp/erregistratu.html',
             {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'mota':erabiltzaile_mota, 'erabiltzaile_form': erabiltzaile_form, 'erabiltzaile_profil_form': erabiltzaile_profil_form, 'erregistratuta': erregistratuta} )
+
+
+
+
+
+
+
+
+
+
+@login_required
+def erabiltzaileak_bilatu(request):
+
+    #Erabiltzaileak bilatzera joko da
+
+    if request.method == 'POST':
+        
+        if request.POST['zerbitzua'] == 'Guztiak':
+            #Ez da zerbitzuen araberako bilaketarik egingo
+            bilaketa_emaitzak = ErabiltzaileProfila.objects.filter(Q(erabiltzailea__username__icontains=request.POST['username']) & Q(erabiltzailea__email__icontains=request.POST['email']) & Q(izena__icontains=request.POST['izena']) & Q(abizena1__icontains=request.POST['abizena1']) & Q(abizena2__icontains=request.POST['abizena2']) & Q(azpizerbitzua__icontains=request.POST['azpizerbitzua']))
+
+        else:
+
+            bilaketa_emaitzak = ErabiltzaileProfila.objects.filter(Q(erabiltzailea__username__icontains=request.POST['username']) & Q(erabiltzailea__email__icontains=request.POST['email']) & Q(izena__icontains=request.POST['izena']) & Q(abizena1__icontains=request.POST['abizena1']) & Q(abizena2__icontains=request.POST['abizena2']) & Q(azpizerbitzua__icontains=request.POST['azpizerbitzua']) & Q(zerbitzua__icontains=request.POST['zerbitzua']))
+        
+
+    else:
+        
+        bilaketa_emaitzak = []
+
+
+
+
+    #Jakiteko zein motako erabiltzailea den
+    erabiltzaile_mota = ErabiltzaileProfila.objects.filter(erabiltzailea=request.user)[0].zerbitzua
+    #aldagai hau erabiliko da html-an konprobazioa egiteko
+    farmazia = 'Farmazia'
+    admin = 'admin'
+
+    #Pendiente dauden Errezetak aterako dira
+    errezeta_pendienteak = EnsaioErrezeta.objects.filter(Q(pendiente='Pendiente'))
+
+
+    # Render the template depending on the context.
+    return render(request,
+            'farmaciapp/erabiltzaile_kudeaketa_menua.html',
+            {'pendienteak':errezeta_pendienteak.count, 'admin':admin, 'mota':erabiltzaile_mota, 'farmazia':farmazia, 'bilaketa_emaitzak':bilaketa_emaitzak} )
+    #TODO
+
+
+
 
 
 @login_required

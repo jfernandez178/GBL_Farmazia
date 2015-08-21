@@ -18,7 +18,11 @@
         <!-- include a theme, can be included into the core instead of 2 separate files -->
         <link rel="stylesheet" href="{% static "js/alertify.default.css" %}" />
   
-        <title>Errezeta Pendienteak</title>
+        <title>{{medikamentua.ident}} medikamentuaren dispentsazio-informazioa</title>
+
+        
+
+
     </head>
 
     <body>
@@ -35,15 +39,15 @@
         </div>
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="/farmaciapp/">Hasiera<span class="glyphicon glyphicon-home" aria-hidden="true"></span></a></li>
-                <li><a href="/farmaciapp/logout/">Sesioa itxi<span class="glyphicon glyphicon-log-out" aria-hidden="true"></span></a><br/></li>
+                <li><a href="/farmaciapp/">Hasiera <span class="glyphicon glyphicon-home" aria-hidden="true"></span></a></li>
+                <li><a href="/farmaciapp/logout/">Sesioa itxi <span class="glyphicon glyphicon-log-out" aria-hidden="true"></span></a><br/></li>
 
             </ul>
         </div></div></div>
 
             <div class="container-fluid">
         <div class="row">
-                <div class="col-sm-3 col-md-2 sidebar">
+               <div class="col-sm-3 col-md-2 sidebar">
         <h3>Erabiltzailea: {{ user.username }}</h3>
         <h4>Zerbitzua: {{mota}}</h4><br/>
                 <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu  <span class="glyphicon glyphicon-book" aria-hidden="true"></span></a><br/>
@@ -56,61 +60,31 @@
                     <a href="/farmaciapp/aukera_menua/erabiltzaile_menua/">Erabiltzaileak Kudeatu  <span class="glyphicon glyphicon-user" aria-hidden="true"></span></a><br/>
                 {% endif %}
                 <br/>
-                <a href="..">Atzera  <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span></a><br/>
+                <a href="../..">Atzera  <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span></a><br/>
                 <a href="/farmaciapp/aukera_menua">Hasiera  <span class="glyphicon glyphicon-home" aria-hidden="true"></span></a>
         </div>
 
 
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+            <br/><br/>
 
-       
-        <!--TODO-->
-        <h3>Errezeta Pendienteen Lista: </br></h3>
+        Unitate kopurua ensaioan zehar: {{unitate_totalak}}<br/><br/>
 
-        {% if not errezeta_pendienteak %}
+        Dispentsatutako unitate kopuruak: {{dosiak}}<br/><br/>
 
-        <div class="alert alert-info" role="alert">
-          <span class="glyphicon glyphicon-inbox" aria-hidden="true"></span>
-          <span class="sr-only">Informazioa: </span>
-            Ez dago onartu gabeko errezetarik.
-        </div>
+        Dispentsazioa jaso duten pazienteak: <br/>
 
+        {% for p in pazienteak %}
 
-        {% else %}
+            <li>Pazientea: {{p.paziente}}; &nbsp&nbsp&nbsp dispentsazioak: {{p.dosia}}
+            </li>
 
-
-        {% for e in errezeta_pendienteak %}
-            <li>
-                    <a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/errezeta/{{ e.ident }}">{{ e.errezetaIzena }}</a></li>
         {% endfor %}
-
-        {% endif %}
-
-               
-        <br/>
-        <br/>
-        {% if mota != farmazia %}
-
-        
         
 
-
-
-        <input class="btn btn-primary" type=button name="botonErrezetaBerria" onClick="location.href='/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/'" value='Errezeta Berria Sortu'>
-        <br/><br/>
-        {% endif %}
-
-        <!--<input class="btn btn-primary" type=button name="botonAtzera" onClick="location.href='../'" value='Atzera'>
-        <br/><br/>
-
-        <input class="btn btn-primary" type=button name="botonHome" onClick="location.href='/farmaciapp/aukera_menua'" value='Hasiera'>-->
-        <br/><br/>
         
-
-        {{data}}
-
 
         </div></div>
-
+        
     </body>
 </html>

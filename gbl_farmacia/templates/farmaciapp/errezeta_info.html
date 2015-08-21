@@ -1,54 +1,26 @@
 <!DOCTYPE html>
 <html>
     <head>
-         <link rel="icon" href="http://getbootstrap.com/favicon.ico">
+        <link rel="icon" href="http://getbootstrap.com/favicon.ico">
         <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="http://getbootstrap.com/examples/dashboard/dashboard.css" rel="stylesheet">
         <!-- Is anyone getting tired of repeatedly entering the header over and over?? -->
-        <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
-  <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
-  <link rel="stylesheet" href="/resources/demos/style.css">
-  <script>
-  $(function() {
-    $( ".vDateField" ).datepicker({ dateFormat: 'yy-mm-dd' }).val();
-  });
-  </script>
-  
-        <title>Errezeta: {{errezeta_ident}}</title>
 
         {% load staticfiles %}
-        <script src="{% static "js/jquery-1.11.1.js" %}"></script>
+
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+        <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+        <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+        <script src="{% static "js/jquery-farmaciapp.js" %}"></script>
         <script src="{% static "js/alertify.min.js" %}"></script>
         <!-- include the core styles -->
         <link rel="stylesheet" href="{% static "js/alertify.core.css" %}" />
         <!-- include a theme, can be included into the core instead of 2 separate files -->
         <link rel="stylesheet" href="{% static "js/alertify.default.css" %}" />
-        <script>
+  
+        <title>Errezeta: {{errezeta_ident}}</title>
 
-           
-            function konfirmazioa(form_id){
-                   alertify.confirm("Ziur al zaude erabakiarekin?", function (e) {
-
-                if (e) {
-                    
-                    document.getElementById(form_id).submit();
-                    
-                } else {
-
-                    //return false;
-                    // user clicked "cancel"
-
-                }
-                });
-                   
-                   
-            }
-
-
-        </script>
-
-
+        
         
     </head>
 
@@ -132,6 +104,8 @@
              <form id="errezeta_moldaketa" action="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/errezeta/{{errezeta_ident}}/modifikatu/" method="POST">
             
                 {% csrf_token %}
+                <b>Errezeta: </b>{{errezetaIzena}}
+                <br/><br/>
 
                 <input type="hidden" name="errezetaren_sortzailea" value="{{errezetaren_sortzailea}}">
                 <input type="hidden" name="ensaioaZ" value="{{ensaioa}}">
@@ -143,8 +117,9 @@
                 {{errezeta_form.as_p}}
 
                 <br/>
-                Sortzailea: {{errezetaren_sortzailea}}
-                <br/><br/>
+                <b>Sortzailea:<b/> {{errezetaren_sortzailea}}
+                <br/>
+                <br/>
 
 
                 
@@ -153,6 +128,7 @@
 
             <br/><br/>
 
+            
             <form id="errezeta_onarpena" action="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/errezeta/{{errezeta_ident}}/errezeta_onartu/" method="POST">
             
                 {% csrf_token %}
@@ -167,21 +143,38 @@
 
                 <br/><br/>
 
+                {% if not ensaioaren_medikamentuak %}
+
+                <div class="alert alert-warning" role="alert">
+                  <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                  <span class="sr-only">Informazioa: </span>
+                    Ensaioak ez dauka medikamenturik esleituta.
+                </div>
+
+
+                {% else %}
+
 
                 {% for em in ensaioaren_medikamentuak %}
 
 
-                    <br/><input type="checkbox" name="medikamentua" id="medikamentua" value="{{em}}" />
-                        <label for="medikamentua"><b>{{ em }}</b></label>       
+                    <br/><input type="checkbox" name="medikamentua" id="medikamentua" value="{{em.medikamentua.ident}}" />
+                        <label for="medikamentua"><b>{{ em.medikamentua.ident }}</b></label>       
 
-                    &nbsp&nbsp&nbsp&nbsp Unitateak: <input type="number" name="{{em}}" value="{{em.medikamentua.unitateak}}" min="1" max="{{em.medikamentua.unitateak}}">  
+                    &nbsp&nbsp&nbsp&nbsp Unitateak: <input type="number" name="{{em.medikamentua.ident}}" value="{{em.medikamentua.unitateak}}" min="1" max="{{em.medikamentua.unitateak}}">  
 
                                    
                 {% endfor %}
+
+                {% endif %}
                 <br/><br/>
 
                 
-                <input class="btn btn-primary" type=button onclick="konfirmazioa('errezeta_onarpena')" value="Errezeta Onartu eta Dispentsatu">
+                <input class="btn btn-primary" type=button onclick="konfirmazioa('errezeta_onarpena')" value="Errezeta Onartu eta Dispentsatu">  &nbsp 
+           
+            <button type="button" class="btn btn-info" onClick="informazioa('Errezeta onartuko da eta dispentsazio bezala erregistratuko da. Onartua izateko derrigorrezkoa da gutxienez medikamentu baten unitate bat aukeratzea.')">
+               <span class="glyphicon glyphicon-info-sign"></span> 
+            </button>
             </form>
 
             
@@ -216,25 +209,27 @@
 
 
             {% else %}
+
+            <b>Errezeta: </b>{{errezetaIzena}}
+            <br/><br/>
             
+            <b>Ensaioa:<b/> {{ensaioa}}<br/><br/>
 
-            Ensaioa: {{ensaioa}}<br/><br/>
+            <b>Pazientea:<b/> {{pazientea_ident}}<br/><br/>
 
-            Pazientea: {{pazientea_ident}}<br/><br/>
+            <b>Pazientearen Pisua:<b/> {{paziente_pisua}}<br/><br/>
 
-            Pazientearen Pisua: {{paziente_pisua}}<br/><br/>
+            <b>Preskripzio Data:<b/> {{preskripzioData}}<br/><br/>
 
-            Preskripzio Data: {{preskripzioData}}<br/><br/>
+            <b>Hurrengo Preskripzio Data:<b/> {{hurrengoPreskripzioData}}<br/><br/>
 
-            Hurrengo Preskripzio Data: {{hurrengoPreskripzioData}}<br/><br/>
-
-            Gainontzeko Eremuak: <textarea cols="40" rows="5" name="gainontzekoEremuak">
+            <b>Gainontzeko Eremuak:<b/> <textarea cols="40" rows="5" name="gainontzekoEremuak">
 {{gainontzekoEremuak}}
 </textarea><br/><br/>
 
             {% if mota == admin %}
 
-            Sortzailea: {{errezetaren_sortzailea}}
+            <b>Sortzailea:<b/> {{errezetaren_sortzailea}}
 
             
 
@@ -281,7 +276,6 @@
             <!--<input type=button name="botonOnartuErrezeta" onClick="location.href='/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/errezeta/{{errezeta_ident}}/errezeta_onartuta'" value='Errezeta Onartu eta Dispentsatu'>-->
             <br/><br/>
 
-            TODO: HEMEN KONPROBATU BEHAR DA EA FARMAZEUTIKOA DAGOEN BEGIRA, GAINONTZEKO INFORMAZIOA JARTZEKO, EDO MEDIKUA DEN ETA ZERBAIT ALDATU DEZAKEEN IKUSTEKO
             
             {% else %}
             
@@ -329,7 +323,12 @@
             <input class="btn btn-primary" type=button name="botonHome" onClick="location.href='/farmaciapp/aukera_menua'" value='Hasiera'>-->
             <br/><br/>
             {% if eguneraketa %}
-            Errezeta ondo eguneratu da!
+            <div class="alert alert-success" role="alert">
+              <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+              <span class="sr-only">Oharra: </span>
+                Errezeta ondo eguneratu da!
+            </div>
+            
 
 
             {% endif %}
@@ -338,7 +337,17 @@
 
         {% else %}
 
-        Mezua: {{mezua}}
+        <div class="alert alert-danger" role="alert">
+          <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+          <span class="sr-only">Oharra: </span>
+            {{mezua}}
+        </div>
+        <br/>
+        <a href="..">Atzera  <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span></a><br/>
+
+
+
+        
             <br/><br/>
 
         {% endif %}

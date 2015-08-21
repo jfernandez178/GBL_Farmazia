@@ -1,19 +1,22 @@
 <!DOCTYPE html>
 <html>
     <head>
-         <link rel="icon" href="http://getbootstrap.com/favicon.ico">
+        <link rel="icon" href="http://getbootstrap.com/favicon.ico">
         <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="http://getbootstrap.com/examples/dashboard/dashboard.css" rel="stylesheet">
         <!-- Is anyone getting tired of repeatedly entering the header over and over?? -->
+
+        {% load staticfiles %}
+
         <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
-  <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
-  <link rel="stylesheet" href="/resources/demos/style.css">
-  <script>
-  $(function() {
-    $( ".vDateField" ).datepicker({ dateFormat: 'yy-mm-dd' }).val();
-  });
-  </script>
+        <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+        <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+        <script src="{% static "js/jquery-farmaciapp.js" %}"></script>
+        <script src="{% static "js/alertify.min.js" %}"></script>
+        <!-- include the core styles -->
+        <link rel="stylesheet" href="{% static "js/alertify.core.css" %}" />
+        <!-- include a theme, can be included into the core instead of 2 separate files -->
+        <link rel="stylesheet" href="{% static "js/alertify.default.css" %}" />
   
         <title>Ensaioen Historikoa</title>
     </head>
@@ -78,10 +81,24 @@
         <br/><br/>   
        
         <!--TODO-->
-        <h4>Itxita dauden Ensaioen lista: </br></h4>
+        {% if bilaketa_emaitzak %} 
+
+        <h4>Itxita dauden Ensaioen lista: {{zenbatEnsaio}} ensaio</br></h4>
         {% for e in bilaketa_emaitzak %}
-            <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaioen_historikoa/{{ e.titulua }}/">{{ e.titulua }}</a><br/>
+            <li>
+            <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaioen_historikoa/{{ e.protokoloZenbakia }}/">{{ e.protokoloZenbakia }}</a><br/>
+        </li>
         {% endfor %}
+
+        {% else %}
+
+        <div class="alert alert-info" role="alert">
+          <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+          <span class="sr-only">Informazioa: </span>
+            Ez da aurkitu ensaiorik.
+        </div>
+
+        {% endif %}
 
                
        

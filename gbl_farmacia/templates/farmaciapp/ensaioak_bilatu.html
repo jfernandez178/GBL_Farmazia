@@ -2,25 +2,32 @@
 {% load static %}
 <html>
     <head>
-         <link rel="icon" href="http://getbootstrap.com/favicon.ico">
+        <link rel="icon" href="http://getbootstrap.com/favicon.ico">
         <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="http://getbootstrap.com/examples/dashboard/dashboard.css" rel="stylesheet">
         <!-- Is anyone getting tired of repeatedly entering the header over and over?? -->
-      
+
+        {% load staticfiles %}
+
         <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
-  <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
-  <link rel="stylesheet" href="/resources/demos/style.css">
-  <script>
-  $(function() {
-    $( ".vDateField" ).datepicker({ dateFormat: 'yy-mm-dd' }).val();
-  });
-  </script>
+        <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+        <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+        <script src="{% static "js/jquery-farmaciapp.js" %}"></script>
+        <script src="{% static "js/alertify.min.js" %}"></script>
+        <!-- include the core styles -->
+        <link rel="stylesheet" href="{% static "js/alertify.core.css" %}" />
+        <!-- include a theme, can be included into the core instead of 2 separate files -->
+        <link rel="stylesheet" href="{% static "js/alertify.default.css" %}" />
+       
+
+  
 
 
 
 
         <title>Ensaio-Bilaketa</title>
+
+     
     </head>
 
     <body>
@@ -37,8 +44,8 @@
         </div>
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="/farmaciapp/">Hasiera</a></li>
-                <li><a href="/farmaciapp/logout/">Sesioa itxi</a><br/></li>
+                <li><a href="/farmaciapp/">Hasiera <span class="glyphicon glyphicon-home" aria-hidden="true"></span></a></li>
+                <li><a href="/farmaciapp/logout/">Sesioa itxi <span class="glyphicon glyphicon-log-out" aria-hidden="true"></span></a><br/></li>
 
             </ul>
         </div></div></div>
@@ -81,32 +88,45 @@
            
         </form>
         
-        <br/>
-
+        
         <!--<input class="btn btn-primary" type=button name="botonAtzera" onClick="location.href='../'" value='Atzera'>
         <br/><br/>
         <input class="btn btn-primary" type=button name="botonHome" onClick="location.href='/farmaciapp/aukera_menua'" value='Hasiera'>-->
-        <br/><br/>
+        <br/>
 
 
 
         {% if mota == admin %}
 
+        {% if bilaketa_emaitzak %}
+
         <form id="ensaio_ezabaketa" action="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ezabatu/" method="POST">
         
             {% csrf_token %}
+
+            Irekita dauden ensaio kopurua: {{zenbatEnsaio}}<br/>
   
             {% for e in bilaketa_emaitzak %}
 
 
                 <input type="checkbox" name="ensaioa" id="ensaioa" value="{{e.titulua}}" />
-                <label for="ensaioa"><b><a href="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{ e.titulua }}">{{ e.titulua }}</a></b></label><br />
+                <label for="ensaioa"><b><a href="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{ e.protokoloZenbakia }}">{{ e.protokoloZenbakia }}</a></b></label><br />
 
                             <!--<li class="active"><li>
                             <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{ e.titulua }}">{{ e.titulua }}</a></li>-->
             {% endfor %}
-            <input class="btn btn-primary" type="submit" value="Ezabatu">
+            <input class="btn btn-danger" type=button onclick="konfirmazioa('ensaio_ezabaketa')" value="Ezabatu">
         </form>
+
+        {% else %}
+
+        <div class="alert alert-info" role="alert">
+          <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+          <span class="sr-only">Informazioa: </span>
+            Ez da aurkitu ensaiorik.
+        </div>
+
+        {% endif %}
 
 
         {% for e in ensaio_lista %}
@@ -120,11 +140,27 @@
 
         {% else %}
 
+        {% if bilaketa_emaitzak %}
+        Irekita dauden ensaio kopurua: {{zenbatEnsaio}}<br/>
+
+
         {% for e in bilaketa_emaitzak %}
 
-
-               <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{ e.titulua }}">{{ e.titulua }}</a><br/>
+            <li>
+               <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{ e.protokoloZenbakia }}">{{ e.protokoloZenbakia }}</a><br/>
+           </li>
         {% endfor %}
+
+        {% else %}
+
+        <div class="alert alert-info" role="alert">
+          <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+          <span class="sr-only">Informazioa: </span>
+            Ez da aurkitu ensaiorik.
+        </div>
+
+
+        {% endif %}
 
 
 

@@ -23,9 +23,19 @@ class ErabiltzaileFormularioa(forms.ModelForm):
 
 #Hau bakarrik izango litzateke erabiltzaileak bere profila izan nahiko balu.
 class ErabiltzaileProfilFormularioa(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(ErabiltzaileProfilFormularioa, self).__init__(*args, **kwargs)
+        # Making name required
+        self.fields['azpizerbitzua'].required = False
+        
+
     class Meta:
         model = ErabiltzaileProfila
-        fields = ('izena', 'abizena1', 'abizena2', 'zerbitzua')
+        fields = ('izena', 'abizena1', 'abizena2', 'zerbitzua', 'azpizerbitzua')
+
+
+
 
 
 #Ondorengo formularioa ensaio berri bat sortzeko erabiliko da
@@ -36,16 +46,17 @@ class EnsaioBerriFormularioa(forms.ModelForm):
         super(EnsaioBerriFormularioa, self).__init__(*args, **kwargs)
         # Making name required
         self.fields['bukaeraData'].required = False
-        self.fields['hasieraData'].widget.attrs = {'class': 'vDateField'}
-        self.fields['bukaeraData'].widget.attrs = {'class': 'vDateField'}
+        self.fields['bukaeraData'].widget.attrs = {'class':'vDateField'}
+        self.fields['hasieraData'].widget.attrs = {'class':'vDateField'}
         self.fields['bukaeraData'].widget = forms.HiddenInput()
         self.fields['egoera'].widget = forms.HiddenInput()
         self.fields['egoera'].required = False
+        
 
 
     class Meta:
-        
-		model = Ensaioa
+        fields = '__all__'
+        model = Ensaioa
 
 
 #Ondorengo formularioa ensaioen bilaketak egiteko erabiliko da
@@ -66,6 +77,10 @@ class EnsaioBilaketaFormularioa(forms.ModelForm):
         self.fields['promotorea'].required = False
         self.fields['estudioMota'].required = False
         self.fields['monitorea'].required = False
+        self.fields['monitoreaFax'].required = False
+        self.fields['monitoreaEmail'].required = False
+        self.fields['monitoreaTel'].required = False
+        self.fields['monitoreaMugikor'].required = False
         self.fields['ikertzailea'].required = False
         self.fields['komentarioak'].widget = forms.HiddenInput()
 
@@ -116,6 +131,11 @@ class MedikamentuBilaketaFormularioa(forms.ModelForm):
         self.fields['bidalketaOrdua'].widget.attrs = {'class': 'vTimeField'}
         self.fields['unitateak'].required = False
         self.fields['unitateak'].widget = forms.HiddenInput()
+        self.fields['identKodetua'].required = False
+        self.fields['identKodetua'].widget = forms.HiddenInput()
+        self.fields['unitateak_historikoa'].required = False
+        self.fields['unitateak_historikoa'].widget = forms.HiddenInput()
+
 
         #self.fields['ensaioa'].widget = forms.HiddenInput()
         
@@ -160,6 +180,8 @@ class ErrezetaBerriFormularioa(forms.ModelForm):
         self.fields['pazientea'].widget = forms.HiddenInput()
         self.fields['preskripzioData'].widget = forms.HiddenInput()
         self.fields['hurrengoPreskripzioData'].widget = forms.HiddenInput()
+        self.fields['errezetaIzena'].required = False
+        self.fields['errezetaIzena'].widget = forms.HiddenInput()
 
 
 
@@ -186,6 +208,8 @@ class ErrezetaBerriEnsaiotikFormularioa(forms.ModelForm):
         self.fields['pendiente'].widget = forms.HiddenInput()
         self.fields['ensaioa'].widget = forms.HiddenInput()
         self.fields['sortzailea'].widget = forms.HiddenInput()
+        self.fields['errezetaIzena'].required = False
+        self.fields['errezetaIzena'].widget = forms.HiddenInput()
 
 
     class Meta:
@@ -231,6 +255,11 @@ class MedikamentuBerriFormularioa(forms.ModelForm):
         self.fields['bidalketaData'].widget.attrs = {'class': 'vDateField'}
         self.fields['kaduzitatea'].widget.attrs = {'class': 'vDateField'}
         self.fields['kit'].required = True
+        self.fields['identKodetua'].required = False
+        self.fields['identKodetua'].widget = forms.HiddenInput()
+        self.fields['unitateak_historikoa'].required = False
+        self.fields['unitateak_historikoa'].widget = forms.HiddenInput()
+
 
 
 
@@ -270,8 +299,8 @@ class PazienteBerriFormularioa(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(PazienteBerriFormularioa, self).__init__(*args, **kwargs)
         # Making name required
-        self.fields['idensaioan'].required = False
-        self.fields['idensaioan'].widget = forms.HiddenInput()
+        self.fields['idensaioan'].required = True
+        #self.fields['idensaioan'].widget = forms.HiddenInput()
 
 
 

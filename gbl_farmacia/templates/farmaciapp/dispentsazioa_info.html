@@ -1,21 +1,29 @@
 <!DOCTYPE html>
 <html>
     <head>
-         <link rel="icon" href="http://getbootstrap.com/favicon.ico">
+        <link rel="icon" href="http://getbootstrap.com/favicon.ico">
         <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="http://getbootstrap.com/examples/dashboard/dashboard.css" rel="stylesheet">
         <!-- Is anyone getting tired of repeatedly entering the header over and over?? -->
+
+        {% load staticfiles %}
+
         <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
-  <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
-  <link rel="stylesheet" href="/resources/demos/style.css">
-  <script>
-  $(function() {
-    $( ".vDateField" ).datepicker({ dateFormat: 'yy-mm-dd' }).val();
-  });
-  </script>
+        <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+        <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+        <script src="{% static "js/jquery-farmaciapp.js" %}"></script>
+        <script src="{% static "js/alertify.min.js" %}"></script>
+        <!-- include the core styles -->
+        <link rel="stylesheet" href="{% static "js/alertify.core.css" %}" />
+        <!-- include a theme, can be included into the core instead of 2 separate files -->
+        <link rel="stylesheet" href="{% static "js/alertify.default.css" %}" />
   
         <title>Dispentsazioa: {{dispentsazioa}}; pazientea: {{pazientea}}</title>
+
+        
+
+
+        
     </head>
 
     <body>
@@ -62,30 +70,35 @@
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
             <br/><br/>
 
-        Ensaioa: {{ensaioa}}<br/><br/>
+        <b>Errezeta:<b/> {{errezetaIzena}}<br/><br/>
 
-        Dispentsazioaren Data: {{bukaeraData}}<br/><br/>
+        <b>Ensaioa:<b/> {{ensaioa}}<br/><br/>
 
-        Pazientea: {{pazientea}}<br/><br/>
+        <b>Dispentsazioaren Data:<b/> {{bukaeraData}}<br/><br/>
 
-        Nork dispentsatu du: {{dispentsatzailea}}<br/><br/><br/>
+        <b>Pazientea:<b/> {{pazientea}}<br/><br/>
+
+        <b>Nork dispentsatu du:<b/> {{dispentsatzailea}}<br/><br/><br/>
 
         {{gainontzekoEremuak}}<br/><br/>
 
-        <b>Medikamentuen informazioa:</b> <br/><br/>
+        <ins>Medikamentuen informazioa:</ins> <br/><br/>
 
         {% for m in medikamentuen_informazioa %}
 
-            Medikamentua: {{m.medikamentua}}; dosia: {{m.dosia}}
+            <li><b>Medikamentua:</b> {{m.medikamentua.ident}}; <b>dosia:</b> {{m.dosia}}</li>   
             <br/>
         {% endfor %}
 
 
         <br/><br/>
 
-        BOTOI BAT GEHITU BEHAR DA PDF-AN ATERATZEKO INFORMAZIOA
 
-        <input class="btn btn-primary" type=button name="botonPDF" onClick="location.href='/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{ensaioa}}/dispentsazioak/{{dispentsazioa}}/pdf/'" value='PDF-a eskuratu'>
+        <input class="btn btn-primary" type=button name="botonPDF" onClick="location.href='/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{ensaioa}}/dispentsazioak/{{dispentsazioa}}/pdf/'" value='PDF-a eskuratu'> &nbsp 
+           
+            <button type="button" class="btn btn-info" onClick="informazioa('Uneko dispentsazioari dagokion informazioa PDF formatuan jaitsiko duen aukera. Inprimatuko den informazioa: ensaioa, pazientea eta bere informazioa eta dispentsazioari dagokion errezetan definitutako gainontzeko ezaugarriak.')">
+               <span class="glyphicon glyphicon-info-sign"></span> 
+            </button>
         <br/><br/>
 
 
