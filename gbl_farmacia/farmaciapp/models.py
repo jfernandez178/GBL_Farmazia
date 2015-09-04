@@ -19,11 +19,11 @@ class Medikamentua(models.Model):
     #ondorengo aldagaia url-etan arazorik ez emateko ident kodetua da
     identKodetua = models.IntegerField(blank=True, null=True)
 
-    kit = models.IntegerField(blank=True)
-    lote = models.CharField(blank=True, max_length=128)
+    kit = models.CharField(max_length=128, null=True, blank=True)
+    lote = models.CharField(blank=True, max_length=128, null=True)
     kaduzitatea = models.DateField(blank=True)
-    bidalketaZenbakia = models.IntegerField(blank=True)
-    bidalketaData = models.DateField(blank=True)
+    bidalketaZenbakia = models.CharField(max_length=128)
+    bidalketaData = models.DateField()
 
     #medikamentu horren zenbat unitate dauden Stock-ean adierazteko
     unitateak = models.IntegerField(default=1)
@@ -40,10 +40,10 @@ class Medikamentua(models.Model):
 
 #Pazienteari dagokion entitatea eta bere erlazioak
 class Pazientea(models.Model):
-    #ident izango da Pazientearen gako nagusia
+    #ident izango da Pazientearen gako nagusia, idensaioarekin batera
     ident = models.AutoField(primary_key=True)
 
-    #ensaioaren barruan zein id duen adierazteko
+    #ensaioaren barruan zein id duen adierazteko; gako nagusiaren parte ere izango da
     idensaioan = models.CharField(max_length=128, blank=True)
     izena = models.CharField(max_length=128)
 
@@ -53,11 +53,11 @@ class Pazientea(models.Model):
     #pazienteari dagozkion beharrezko datuak:
     pisua = models.FloatField()
     #datu gehiago behar badira hemen jartzen dira
+
     
 
-    #IDENSAIOAN EDO IDENT???
     def __unicode__(self):
-        return unicode(self.ident)
+        return unicode(self.idensaioan)
 
 
 #Ensaioari dagokion entitatea eta bere erlazioak
@@ -178,11 +178,14 @@ class EnsaioErrezeta(models.Model):
 #Pazienteak eta Ensaioak lotzen dituen entitatea da
 class PazienteEnsaio(models.Model):
     ensaioa = models.ForeignKey(Ensaioa, null=True, related_name="pazientea_ensaioan")
-    pazientea = models.ForeignKey(Pazientea, null=True)
+    pazientea = models.ForeignKey(Pazientea, null=True, related_name="pazientea_pazienteensaion")
+
+    #Ensaioaren barruan zein id duen adierazteko
+    idensaioan = models.CharField(max_length=128, blank=True, null=True)
 
     #PazienteEnsaioaren instantzia eskuratzen denean dagokion ensaioaren bidez izendatuko da
     def __unicode__(self):
-        return unicode(self.ensaioa)
+        return unicode(self.idensaioan)
 
 
 #Erabiltzailearen profilaren informazioa gordeko duen entitatea da
@@ -196,11 +199,12 @@ class ErabiltzaileProfila(models.Model):
     izena = models.CharField(max_length=128)
     abizena1 = models.CharField(max_length=128)
     abizena2 = models.CharField(max_length=128)
+
+    #Bi aukera egongo dira eskuragarri: farmaziako langilea edo erabiltzaile arrunta.
     zerbitzua = models.CharField(max_length=128, default=1, choices=(('Farmazia', 'Farmazia'), ('Medicina', 'Medicina')))
 
     #Adibidez, onkologia, radiologia, etab.
     azpizerbitzua = models.CharField(max_length=300, null=True, blank=True)
-    #...???
 
     # modelo honen instantzia bat atzitzen denean zein izenekin definituko den instantzia hori adierazten du
     def __unicode__(self):

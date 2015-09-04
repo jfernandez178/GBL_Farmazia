@@ -32,7 +32,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="/farmaciapp/">FARMACIAPP</a>
+          <a class="navbar-brand" href="/farmaciapp/">FARMAZIAPP</a>
         </div>
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav navbar-right">
@@ -67,10 +67,24 @@
             <br/><br/>
         {% if mota == farmazia or mota == admin %}
 
-         {% for m in bilaketa_emaitzak %}
+        {% if bilaketa_emaitzak %}
+
+        {% for m in bilaketa_emaitzak %}
             <li>
                     <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{protokoloZenbakia}}/medikamentuak_aztertu/medikamentua/{{m.identKodetua}}/">{{ m.ident }}</a></li>
         {% endfor %}
+
+        {% else %}
+
+
+        <div class="alert alert-info" role="alert">
+          <span class="glyphicon glyphicon-inbox" aria-hidden="true"></span>
+          <span class="sr-only">Informazioa: </span>
+            Ez dago medikamenturik ensaio honetan.
+        </div>
+
+        {% endif %}
+
         <br/><br/>
 
 

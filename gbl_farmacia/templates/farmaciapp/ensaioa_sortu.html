@@ -5,8 +5,7 @@
         <link rel="icon" href="http://getbootstrap.com/favicon.ico">
         <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="http://getbootstrap.com/examples/dashboard/dashboard.css" rel="stylesheet">
-        <!-- Is anyone getting tired of repeatedly entering the header over and over?? -->
-
+       
         {% load staticfiles %}
 
         <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
@@ -14,12 +13,9 @@
         <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
         <script src="{% static "js/jquery-farmaciapp.js" %}"></script>
         <script src="{% static "js/alertify.min.js" %}"></script>
-        <!-- include the core styles -->
         <link rel="stylesheet" href="{% static "js/alertify.core.css" %}" />
-        <!-- include a theme, can be included into the core instead of 2 separate files -->
         <link rel="stylesheet" href="{% static "js/alertify.default.css" %}" />
-        
-  
+          
         <title>Ensaio Berria</title>
 
 
@@ -39,7 +35,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="/farmaciapp/">FARMACIAPP</a>
+          <a class="navbar-brand" href="/farmaciapp/">FARMAZIAPP</a>
         </div>
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav navbar-right">
@@ -54,18 +50,18 @@
                 <div class="col-sm-3 col-md-2 sidebar">
         <h3>Erabiltzailea: {{ user.username }}</h3>
         <h4>Zerbitzua: {{mota}}</h4><br/>
-                <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu  <span class="glyphicon glyphicon-book" aria-hidden="true"></span></a><br/>
-                <a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu  <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span><span class="badge">{{pendienteak}}</span></a><br/>
-                {% if mota == farmazia %}
-                    <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu  <span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a><br/>
-                {% endif %}
-                {% if mota == admin %}
-                    <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu  <span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a><br/>
-                    <a href="/farmaciapp/aukera_menua/erabiltzaile_menua/">Erabiltzaileak Kudeatu  <span class="glyphicon glyphicon-user" aria-hidden="true"></span></a><br/>
-                {% endif %}
-                <br/>
-                <a href="javascript:history.back()">Atzera  <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span></a><br/>
-                <a href="/farmaciapp/aukera_menua">Hasiera  <span class="glyphicon glyphicon-home" aria-hidden="true"></span></a>
+        <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/">Ensaioak Kontsultatu  <span class="glyphicon glyphicon-book" aria-hidden="true"></span></a><br/>
+        <a href="/farmaciapp/aukera_menua/errezeta_pendienteak_kontsultatu/">Errezeta Pendienteak Kontsultatu  <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span><span class="badge">{{pendienteak}}</span></a><br/>
+        {% if mota == farmazia %}
+            <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu  <span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a><br/>
+        {% endif %}
+        {% if mota == admin %}
+            <a href="/farmaciapp/aukera_menua/medikamentu_kontsulta/">Medikamentuak Aztertu  <span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a><br/>
+            <a href="/farmaciapp/aukera_menua/erabiltzaile_menua/">Erabiltzaileak Kudeatu  <span class="glyphicon glyphicon-user" aria-hidden="true"></span></a><br/>
+        {% endif %}
+        <br/>
+        <a href="javascript:history.back()">Atzera  <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span></a><br/>
+        <a href="/farmaciapp/aukera_menua">Hasiera  <span class="glyphicon glyphicon-home" aria-hidden="true"></span></a>
         </div>
 
 
@@ -74,28 +70,28 @@
 
         {% if mota == admin %}
 
-        {% if sortuta %}
-        <div class="alert alert-success" role="alert">
-          <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
-          <span class="sr-only">Informazioa: </span>
-            Ensaioa ondo sortu da!
-        </div>
-        <br/><br/>
-        <input type=button class="btn btn-primary" name="botonMedikamentuakGehituEnsaioari" onClick="location.href='/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{ensaioa_titulua}}/'" value='Ensaio Berria Ikusi Medikamentuak Gehitzeko'>
+            {% if sortuta %}
+                <div class="alert alert-success" role="alert">
+                  <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                  <span class="sr-only">Informazioa: </span>
+                    Ensaioa ondo sortu da!
+                </div>
+                <br/><br/>
+                <input type=button class="btn btn-primary" name="botonMedikamentuakGehituEnsaioari" onClick="location.href='/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_bilaketa/ensaioa/{{ensaioa_titulua}}/'" value='Ensaio Berria Ikusi Medikamentuak Gehitzeko'>
         
-        {% else %}
+            {% else %}
 
-        <form id="ensaioa_sortu2" method="post" action="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_sorkuntza/" enctype="multipart/form-data">
-            {% csrf_token %}
+                <form id="ensaioa_sortu2" method="post" action="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaio_sorkuntza/" enctype="multipart/form-data">
+                    {% csrf_token %}
 
-            {{ ensaio_form.as_p }}
+                    {{ ensaio_form.as_p }}
 
-            <input class="btn btn-primary" type=button onclick="konfirmazioa('ensaioa_sortu2')" name="sortu_ensaio_berria" value="Sortu Ensaioa"/>
-           
-        </form>
-        <br/>
+                    <input class="btn btn-primary" type=button onclick="konfirmazioa('ensaioa_sortu2')" name="sortu_ensaio_berria" value="Sortu Ensaioa"/>
+                   
+                </form>
+                <br/>
 
-        {% endif %}
+            {% endif %}
         {% endif %}
 
 
