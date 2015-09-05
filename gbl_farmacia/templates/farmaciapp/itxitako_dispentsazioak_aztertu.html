@@ -77,10 +77,22 @@
 
         <br/><br/>
 
-        {% for d in bilaketa_emaitzak %}
-            <!--<li class="active">--><li>
-                    <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaioen_historikoa/{{ensaioa_titulua}}/dispentsazioak/{{d.ident}}/">{{ d.ident }}_{{d.paziente.idensaioan}}</a></li>
-        {% endfor %}
+        {% if bilaketa_emaitzak %}
+
+            {% for d in bilaketa_emaitzak %}
+                <!--<li class="active">--><li>
+                        <a href="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaioen_historikoa/{{ensaioa_titulua}}/dispentsazioak/{{d.ident}}/">{{ d.ident }}_{{d.paziente.idensaioan}}</a></li>
+            {% endfor %}
+
+        {% else %}
+
+            <div class="alert alert-info" role="alert">
+              <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+              <span class="sr-only">Informazioa: </span>
+                Ez da dispentsaziorik aurkitu.
+            </div>
+
+        {% endif %}
         
         
         <br/><br/>

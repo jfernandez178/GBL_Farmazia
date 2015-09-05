@@ -292,6 +292,8 @@ class ErrezetaModifikatuFormularioa(forms.ModelForm):
         self.fields['pendiente'].widget = forms.HiddenInput()
         self.fields['ensaioa'].widget = forms.HiddenInput()
         self.fields['sortzailea'].widget = forms.HiddenInput()
+        self.fields['errezetaIzena'].required = False
+        self.fields['errezetaIzena'].widget = forms.HiddenInput()
 
 
     class Meta:
