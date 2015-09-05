@@ -41,11 +41,11 @@ TEMPLATE_DIRS = (
 SECRET_KEY = 'pg(55_jj)m=887elxa9iepcyqlay7yu0rlcaey3f3u*ikyx#7j'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 TEMPLATE_DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition

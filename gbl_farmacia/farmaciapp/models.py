@@ -131,7 +131,7 @@ class MedikamentuEnsaio(models.Model):
 
     #MedikamentuEnsaio instantzia eskuratzen denean medikamentuaren bidez izendatuko da
 	def __unicode__(self):
-		return unicode(self.medikamentua)# + "; " + self.ensaioa)
+		return unicode(self.medikamentua)
 
 #Pazienteak eta Dispentsazioak lotzen dituen entitatea da
 class PazienteDispentsazio(models.Model):

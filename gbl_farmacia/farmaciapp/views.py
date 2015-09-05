@@ -493,7 +493,7 @@ def dispentsazioak_aztertu(request, ensaioa_protokolo_zenb):
 
     if request.method == 'POST':
         
-        dispentsazio_form = DispentsazioFormularioa(data=request.POST)
+        dispentsazio_form = DispentsazioFormularioa(data=request.POST, ensaioa_protokolo_zenb=ensaioa_protokolo_zenb)
 
         #Formularioko datuak zuzenak badira 
         if (dispentsazio_form.is_valid() and 'dataNoiztik' in request.POST):
@@ -553,7 +553,7 @@ def dispentsazioak_aztertu(request, ensaioa_protokolo_zenb):
                     bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik'])).distinct()
 
                 if (not flagNoiztik and not flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan)).distinct()#.values('paziente', 'ident')
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan)).distinct()
                     flag = pazienteaEnsaioan
 
   
@@ -563,7 +563,7 @@ def dispentsazioak_aztertu(request, ensaioa_protokolo_zenb):
 
 
     else:
-        dispentsazio_form = DispentsazioFormularioa()
+        dispentsazio_form = DispentsazioFormularioa(ensaioa_protokolo_zenb=ensaioa_protokolo_zenb)
         bilaketa_emaitzak = []
 
 
@@ -1190,7 +1190,7 @@ def itxitako_ensaioen_dispentsazioak(request, ensaioa_protokolo_zenb):
 
     if request.method == 'POST':
         
-        dispentsazio_form = DispentsazioFormularioa(data=request.POST)
+        dispentsazio_form = DispentsazioFormularioa(data=request.POST, ensaioa_protokolo_zenb=ensaioa_protokolo_zenb)
 
         #Jasotako datuak zuzenak badira
         if (dispentsazio_form.is_valid() and 'dataNoiztik' in request.POST):
@@ -1260,7 +1260,7 @@ def itxitako_ensaioen_dispentsazioak(request, ensaioa_protokolo_zenb):
     
     else:
 
-        dispentsazio_form = DispentsazioFormularioa()
+        dispentsazio_form = DispentsazioFormularioa(ensaioa_protokolo_zenb=ensaioa_protokolo_zenb)
         bilaketa_emaitzak = []
 
     #Jakiteko zein motako erabiltzailea den

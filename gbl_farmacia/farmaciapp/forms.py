@@ -220,11 +220,15 @@ class DispentsazioFormularioa(forms.ModelForm):
     dataNoizArte = forms.DateField(widget=AdminDateWidget)
     dataNoizArte.required = False
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, ensaioa_protokolo_zenb, *args, **kwargs):
         super(DispentsazioFormularioa, self).__init__(*args, **kwargs)
         # Making name required
         self.fields['medikamentua'].required = False
         self.fields['dispentsazioa'].required = False
+
+        self.fields['paziente'].queryset = Pazientea.objects.filter(pazientea_pazienteensaion__ensaioa__protokoloZenbakia=ensaioa_protokolo_zenb)
+
+
         self.fields['paziente'].required = False
         self.fields['medikamentua'].widget = forms.HiddenInput()
         self.fields['dispentsazioa'].widget = forms.HiddenInput()
