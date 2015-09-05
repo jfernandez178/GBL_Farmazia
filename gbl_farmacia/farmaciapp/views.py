@@ -438,6 +438,8 @@ def ensaioa_info(request, ensaioa_protokolo_zenb):
     context_dict['mota'] = erabiltzaile_mota
     context_dict['farmazia'] = farmazia
     context_dict['admin'] = 'admin'
+
+    context_dict['itxita'] = 'itxita'
       
     try:
 
@@ -457,6 +459,8 @@ def ensaioa_info(request, ensaioa_protokolo_zenb):
         context_dict['monitorea'] = ensaioa.monitorea
         context_dict['ikertzailea'] = ensaioa.ikertzailea
         context_dict['komentarioak'] = ensaioa.komentarioak
+
+
 
         #zeintzuk medikamentu dituen agertuko da lehenik
         ensaioa = Ensaioa.objects.get(protokoloZenbakia=ensaioa_protokolo_zenb)
@@ -1226,16 +1230,16 @@ def itxitako_ensaioen_dispentsazioak(request, ensaioa_protokolo_zenb):
             if paziente_id != -1:
 
                 if (flagNoiztik and flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']) and Q(paziente__ident=pazientea_id)).distinct()
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']) and Q(paziente__ident=paziente_id)).distinct()
 
                 if (not flagNoiztik and flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']) and Q(paziente__ident=pazientea_id)).distinct()
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__lte=request.POST['dataNoizArte']) and Q(paziente__ident=paziente_id)).distinct()
 
                 if (flagNoiztik and not flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(paziente__ident=pazientea_id)).distinct()
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(dispentsazioa__bukaeraData__gte=request.POST['dataNoiztik']) and Q(paziente__ident=paziente_id)).distinct()
 
                 if (not flagNoiztik and not flagNoizarte):
-                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(paziente__ident=pazientea_id)).distinct()
+                    bilaketa_emaitzak = PazienteDispentsazio.objects.filter(Q(dispentsazioa=dispentsazioak_ensaioan) and Q(paziente__ident=paziente_id)).distinct()
 
             
             else:
@@ -1387,8 +1391,7 @@ def medikamentuak_bilatu(request):
             bidalketaOrdua = bidalketaOrdua.strftime('%H:%M')
             if(ensaioa!=None):
 
-                bilaketa_emaitzak = Medikamentua.objects.filter(Q(bidalketaOrdua__icontains=bidalketaOrdua) & Q(medikamentua_ensaioan__ensaioa=ensaioa) & Q(ident__icontains=request.POST['ident']) & Q(kit__icontains=request.POST['kit']) & Q(lote__icontains=request.POST['lote']) & Q(kaduzitatea__icontains=request.POST['kaduzitatea']) & Q(bidalketaZenbakia__icontains=request.POST['bidalketaZenbakia']) & Q(bidalketaData__icontains=request.POST['bidalketaData']))
-                    
+                bilaketa_emaitzak = Medikamentua.objects.filter(Q(medikamentua_ensaioan__ensaioa=ensaioa) & Q(ident__icontains=request.POST['ident']) & Q(kit__icontains=request.POST['kit']) & Q(lote__icontains=request.POST['lote']) & Q(kaduzitatea__icontains=request.POST['kaduzitatea']) & Q(bidalketaZenbakia__icontains=request.POST['bidalketaZenbakia']) & Q(bidalketaData__icontains=request.POST['bidalketaData']))
 
             else:
                 if request.POST['bidalketaOrdua'] == '':

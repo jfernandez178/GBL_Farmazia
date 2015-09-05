@@ -104,6 +104,19 @@
             <li>{{ m.medikamentua.ident }}</a></li>
         
         {% endfor %}
+
+        {% if itxita == egoera %}
+
+        <form id="dispentsazioak_ikusi" method="post" action="/farmaciapp/aukera_menua/ensaio_kontsulta/ensaioen_historikoa/{{protokoloZenbakia}}/dispentsazioak/" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            {{ dispentsazio_form.as_p }}
+
+            <input class="btn btn-primary" type="submit" name="ikusi_dispentsazioak" value="Dispentsazioak Aztertu"/>
+           
+        </form>
+
+        {% else %}
         
         <br/><br/>
         
@@ -169,6 +182,7 @@
             </form>
 
 
+        {% endif %}
         {% endif %}
 
 
